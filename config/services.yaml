@@ -18,3 +18,20 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    # Puerto/adaptador para envío de emails
+    App\Domain\Notification\EmailSenderInterface: '@App\Infrastructure\Notification\SmtpMailer'
+
+    # Puerto/adaptador para persistencia de productos
+    # Puedes alternar el repositorio a usar cambiando la siguiente línea:
+    # - InMemoryProductRepository: para pruebas/desarrollo, sin base de datos.
+    # Inyección de sesión para el repositorio en memoria
+    App\Infrastructure\Product\Repository\InMemoryProductRepository:
+        public: true
+
+    #App\Domain\Product\Repository\ProductRepository: '@App\Infrastructure\Product\Repository\InMemoryProductRepository'
+
+
+    # - DoctrineProductRepository: para producción, usando MySQL.
+    # Para usar Doctrine (MySQL), comenta la línea anterior y descomenta esta:
+    App\Domain\Product\Repository\ProductRepository: '@App\Infrastructure\Product\Repository\DoctrineProductRepository'

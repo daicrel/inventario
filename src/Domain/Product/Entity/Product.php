@@ -1,0 +1,104 @@
+<?php
+
+// src/Domain/Product/Entity/Product.php
+
+namespace App\Domain\Product\Entity;
+
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Mapping as ORM;
+use App\Domain\Product\ValueObject\ProductId;
+use App\Domain\Product\ValueObject\ProductName;
+use App\Domain\Product\ValueObject\ProductDescription;
+
+#[ORM\Entity]
+#[ORM\Table(name: "product")]
+class Product
+{
+    #[ORM\Id]
+    #[ORM\Column(type: "string", name: "id", length: 36)]
+    private string $id;
+
+    #[ORM\Column(type: "string", length: 255)]
+    private string $name;
+
+    #[ORM\Column(type: "text")]
+    private string $description;
+
+    #[ORM\Column(type: "float")]
+    private float $price;
+
+    #[ORM\Column(type: "integer")]
+    private int $stock;
+
+    #[ORM\OneToMany(
+        mappedBy: "product",
+        targetEntity: Variant::class,
+        cascade: ["persist", "remove"],
+        orphanRemoval: true
+    )]
+    private Collection $variants;
+
+    public function __construct(
+        ProductId $id,
+        ProductName $name,
+        ProductDescription $description,
+        float $price,
+        int $stock
+    ) {
+        if ($price < 0) {
+            throw new \InvalidArgumentException('El precio no puede ser negativo');
+        }
+
+        if ($stock < 0) {
+            throw new \InvalidArgumentException('El stock no puede ser negativo');
+        }
+
+        $this->id = (string)$id;
+        $this->name = (string)$name;
+        $this->description = (string)$description;
+        $this->price = $price;
+        $this->stock = $stock;
+        $this->variants = new ArrayCollection();
+    }
+
+    public function addVariant(Variant $variant): void
+    {
+        $this->variants[] = $variant;
+    }
+
+    public function getVariants(): Collection
+    {
+        return $this->variants;
+    }
+
+    public function getId(): ProductId
+    {
+        return new ProductId($this->id);
+    }
+
+    public function getName(): ProductName
+    {
+        return new ProductName($this->name);
+    }
+
+    public function getDescription(): ProductDescription
+    {
+        return new ProductDescription($this->description);
+    }
+
+    public function getPrice(): float
+    {
+        return $this->price;
+    }
+
+    public function getStock(): int
+    {
+        return $this->stock;
+    }
+
+    public function getNameValue(): string
+    {
+        return $this->name;
+    }
+}
