@@ -15,9 +15,45 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
+use OpenApi\Annotations as OA;
 
+/**
+ * @OA\Tag(
+ *     name="Pruebas de Productos",
+ *     description="Endpoints de prueba para productos (solo desarrollo)"
+ * )
+ */
 class ProductTestController extends AbstractController
 {
+    /**
+     * @OA\Post(
+     *     path="/test/product/add",
+     *     summary="Agregar producto de prueba",
+     *     description="Crea un producto de prueba con una variante predefinida (solo para desarrollo)",
+     *     tags={"Pruebas de Productos"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"name"},
+     *             @OA\Property(property="name", type="string", description="Nombre del producto", example="Camiseta")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Producto de prueba creado exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Producto guardado en memoria")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Producto con nombre duplicado",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Ya existe un producto con ese nombre.")
+     *         )
+     *     )
+     * )
+     */
     #[Route('/test/product/add', name: 'test_product_add', methods: ['POST'])]
     public function add(Request $request, ProductRepository $productRepository): JsonResponse
     {
@@ -58,6 +94,41 @@ class ProductTestController extends AbstractController
         return $this->json(['message' => 'Producto guardado en memoria']);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/test/product/list",
+     *     summary="Listar todos los productos",
+     *     description="Obtiene la lista completa de productos con sus variantes",
+     *     tags={"Pruebas de Productos"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de productos obtenida exitosamente",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 type="object",
+     *                 @OA\Property(property="id", type="string", format="uuid"),
+     *                 @OA\Property(property="name", type="string", example="Camiseta"),
+     *                 @OA\Property(property="description", type="string", example="Camiseta de algodón"),
+     *                 @OA\Property(property="price", type="number", format="float", example=19.99),
+     *                 @OA\Property(property="stock", type="integer", example=10),
+     *                 @OA\Property(
+     *                     property="variants",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="string", format="uuid"),
+     *                         @OA\Property(property="name", type="string", example="Camiseta Azul M"),
+     *                         @OA\Property(property="price", type="number", format="float", example=21.99),
+     *                         @OA\Property(property="stock", type="integer", example=5),
+     *                         @OA\Property(property="image", type="string", example="imagen.jpg")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
     #[Route('/test/product/list', name: 'test_product_list', methods: ['GET'])]
     public function list(ProductRepository $productRepository): JsonResponse
     {

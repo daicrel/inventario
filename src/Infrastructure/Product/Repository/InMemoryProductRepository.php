@@ -52,4 +52,11 @@ class InMemoryProductRepository implements ProductRepository
         }
         return null;
     }
+
+    public function delete(Product $product): void
+    {
+        $products = $this->session->get(self::SESSION_KEY, []);
+        unset($products[(string)$product->getId()]);
+        $this->session->set(self::SESSION_KEY, $products);
+    }
 }
