@@ -10,6 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 use App\Domain\Product\ValueObject\ProductId;
 use App\Domain\Product\ValueObject\ProductName;
 use App\Domain\Product\ValueObject\ProductDescription;
+use App\Domain\Product\ValueObject\Price;
 
 #[ORM\Entity]
 #[ORM\Table(name: "product")]
@@ -43,10 +44,10 @@ class Product
         ProductId $id,
         ProductName $name,
         ProductDescription $description,
-        float $price,
+        Price $price,
         int $stock
     ) {
-        if ($price < 0) {
+        if ($price->value() < 0) {
             throw new \InvalidArgumentException('El precio no puede ser negativo');
         }
 
@@ -57,7 +58,7 @@ class Product
         $this->id = (string)$id;
         $this->name = (string)$name;
         $this->description = (string)$description;
-        $this->price = $price;
+        $this->price = $price->value();
         $this->stock = $stock;
         $this->variants = new ArrayCollection();
     }
@@ -87,9 +88,9 @@ class Product
         return new ProductDescription($this->description);
     }
 
-    public function getPrice(): float
+    public function price(): Price
     {
-        return $this->price;
+        return new Price($this->price);
     }
 
     public function getStock(): int

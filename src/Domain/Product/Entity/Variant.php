@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use App\Domain\Product\ValueObject\ProductId;
 use App\Domain\Product\ValueObject\ProductName;
 use App\Domain\Product\ValueObject\VariantId;
+use App\Domain\Product\ValueObject\Price;
 use InvalidArgumentException;
 
 #[ORM\Entity]
@@ -41,11 +42,11 @@ class Variant
         VariantId $variantId,
         Product $product,
         ProductName $name,
-        float $price,
+        Price $price,
         int $stock,
         ?string $image = null
     ) {
-        if ($price < 0) {
+        if ($price->value() < 0) {
             throw new InvalidArgumentException("El precio no puede ser negativo.");
         }
 
@@ -56,7 +57,7 @@ class Variant
         $this->variantId = $variantId->value(); // Guardamos el valor string en la BD
         $this->product = $product;
         $this->name = (string) $name;
-        $this->price = $price;
+        $this->price = $price->value();
         $this->stock = $stock;
         $this->image = $image;
     }
