@@ -1,6 +1,6 @@
 <?php
 
-// src/Infrastructure/Product/Repository/ProductRepository.php 
+// src/Infrastructure/Product/Repository/InMemoryProductRepository.php 
 
 namespace App\Infrastructure\Product\Repository;
 
