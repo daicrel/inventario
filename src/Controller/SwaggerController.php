@@ -75,18 +75,35 @@ class SwaggerController extends AbstractController
                                             ],
                                             'variants' => [
                                                 'type' => 'array',
-                                                'description' => 'Lista de variantes del producto',
+                                                'description' => 'Lista de variantes del producto (ej: colores, tallas, etc.)',
                                                 'items' => [
                                                     'type' => 'object',
+                                                    'required' => ['name', 'value'],
                                                     'properties' => [
                                                         'name' => [
                                                             'type' => 'string',
-                                                            'example' => 'Color Negro'
+                                                            'description' => 'Nombre de la variante (ej: Color, Talla)',
+                                                            'example' => 'Color'
                                                         ],
                                                         'value' => [
                                                             'type' => 'string',
+                                                            'description' => 'Valor de la variante (ej: Negro, XL)',
                                                             'example' => 'Negro'
                                                         ]
+                                                    ],
+                                                    'example' => [
+                                                        'name' => 'Color',
+                                                        'value' => 'Negro'
+                                                    ]
+                                                ],
+                                                'example' => [
+                                                    [
+                                                        'name' => 'Color',
+                                                        'value' => 'Negro'
+                                                    ],
+                                                    [
+                                                        'name' => 'Talla',
+                                                        'value' => 'XL'
                                                     ]
                                                 ]
                                             ]
