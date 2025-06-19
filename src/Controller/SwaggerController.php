@@ -47,11 +47,6 @@ class SwaggerController extends AbstractController
                                         'type' => 'object',
                                         'required' => ['name', 'price', 'stock', 'variants'],
                                         'properties' => [
-                                            'id' => [
-                                                'type' => 'string',
-                                                'format' => 'uuid',
-                                                'description' => 'ID único del producto (opcional, se genera automáticamente)'
-                                            ],
                                             'name' => [
                                                 'type' => 'string',
                                                 'description' => 'Nombre del producto',
@@ -78,32 +73,49 @@ class SwaggerController extends AbstractController
                                                 'description' => 'Lista de variantes del producto (ej: colores, tallas, etc.)',
                                                 'items' => [
                                                     'type' => 'object',
-                                                    'required' => ['name', 'value'],
+                                                    'required' => ['name', 'price', 'stock'],
                                                     'properties' => [
                                                         'name' => [
                                                             'type' => 'string',
-                                                            'description' => 'Nombre de la variante (ej: Color, Talla)',
-                                                            'example' => 'Color'
+                                                            'description' => 'Nombre de la variante',
+                                                            'example' => 'Blanco - Talla 42'
                                                         ],
-                                                        'value' => [
+                                                        'price' => [
+                                                            'type' => 'number',
+                                                            'format' => 'float',
+                                                            'description' => 'Precio de la variante',
+                                                            'example' => 119.99
+                                                        ],
+                                                        'stock' => [
+                                                            'type' => 'integer',
+                                                            'description' => 'Stock de la variante',
+                                                            'example' => 40
+                                                        ],
+                                                        'image' => [
                                                             'type' => 'string',
-                                                            'description' => 'Valor de la variante (ej: Negro, XL)',
-                                                            'example' => 'Negro'
+                                                            'description' => 'Imagen de la variante',
+                                                            'example' => 'pegasus_blanco_42.jpg'
                                                         ]
                                                     ],
                                                     'example' => [
-                                                        'name' => 'Color',
-                                                        'value' => 'Negro'
+                                                        'name' => 'Blanco - Talla 42',
+                                                        'price' => 119.99,
+                                                        'stock' => 40,
+                                                        'image' => 'pegasus_blanco_42.jpg'
                                                     ]
                                                 ],
                                                 'example' => [
                                                     [
-                                                        'name' => 'Color',
-                                                        'value' => 'Negro'
+                                                        'name' => 'Blanco - Talla 42',
+                                                        'price' => 119.99,
+                                                        'stock' => 40,
+                                                        'image' => 'pegasus_blanco_42.jpg'
                                                     ],
                                                     [
-                                                        'name' => 'Talla',
-                                                        'value' => 'XL'
+                                                        'name' => 'Negro - Talla 43',
+                                                        'price' => 119.99,
+                                                        'stock' => 30,
+                                                        'image' => 'pegasus_negro_43.jpg'
                                                     ]
                                                 ]
                                             ]
@@ -139,6 +151,98 @@ class SwaggerController extends AbstractController
                                                 'error' => [
                                                     'type' => 'string',
                                                     'example' => 'Faltan campos obligatorios'
+                                                ]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    'get' => [
+                        'tags' => ['Productos'],
+                        'summary' => 'Listar todos los productos',
+                        'description' => 'Obtiene la lista completa de productos con sus variantes',
+                        'responses' => [
+                            '200' => [
+                                'description' => 'Lista de productos obtenida exitosamente',
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => [
+                                            'type' => 'array',
+                                            'items' => [
+                                                'type' => 'object',
+                                                'properties' => [
+                                                    'id' => [
+                                                        'type' => 'string',
+                                                        'format' => 'uuid',
+                                                        'example' => '550e8400-e29b-41d4-a716-446655440000'
+                                                    ],
+                                                    'name' => [
+                                                        'type' => 'string',
+                                                        'example' => 'Laptop Dell XPS 13'
+                                                    ],
+                                                    'description' => [
+                                                        'type' => 'string',
+                                                        'example' => 'Laptop ultrabook con pantalla de 13 pulgadas'
+                                                    ],
+                                                    'price' => [
+                                                        'type' => 'number',
+                                                        'format' => 'float',
+                                                        'example' => 1299.99
+                                                    ],
+                                                    'stock' => [
+                                                        'type' => 'integer',
+                                                        'example' => 50
+                                                    ],
+                                                    'variants' => [
+                                                        'type' => 'array',
+                                                        'items' => [
+                                                            'type' => 'object',
+                                                            'properties' => [
+                                                                'id' => [
+                                                                    'type' => 'string',
+                                                                    'format' => 'uuid',
+                                                                    'example' => '550e8400-e29b-41d4-a716-446655440001'
+                                                                ],
+                                                                'name' => [
+                                                                    'type' => 'string',
+                                                                    'example' => 'Blanco - Talla 42'
+                                                                ],
+                                                                'price' => [
+                                                                    'type' => 'number',
+                                                                    'format' => 'float',
+                                                                    'example' => 119.99
+                                                                ],
+                                                                'stock' => [
+                                                                    'type' => 'integer',
+                                                                    'example' => 40
+                                                                ],
+                                                                'image' => [
+                                                                    'type' => 'string',
+                                                                    'example' => 'pegasus_blanco_42.jpg'
+                                                                ]
+                                                            ]
+                                                        ]
+                                                    ]
+                                                ]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ],
+                            '500' => [
+                                'description' => 'Error interno del servidor',
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => [
+                                            'type' => 'object',
+                                            'properties' => [
+                                                'error' => [
+                                                    'type' => 'string'
+                                                ],
+                                                'trace' => [
+                                                    'type' => 'string'
                                                 ]
                                             ]
                                         ]
@@ -240,6 +344,136 @@ class SwaggerController extends AbstractController
                                                 'message' => [
                                                     'type' => 'string',
                                                     'example' => 'Producto eliminado exitosamente'
+                                                ]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                '/products/{productId}/variants/{variantId}' => [
+                    'put' => [
+                        'tags' => ['Productos'],
+                        'summary' => 'Actualizar una variante de producto',
+                        'description' => 'Actualiza los datos de una variante específica de un producto',
+                        'parameters' => [
+                            [
+                                'name' => 'productId',
+                                'in' => 'path',
+                                'required' => true,
+                                'description' => 'ID único del producto',
+                                'schema' => [
+                                    'type' => 'string',
+                                    'format' => 'uuid'
+                                ]
+                            ],
+                            [
+                                'name' => 'variantId',
+                                'in' => 'path',
+                                'required' => true,
+                                'description' => 'ID único de la variante',
+                                'schema' => [
+                                    'type' => 'string',
+                                    'format' => 'uuid'
+                                ]
+                            ]
+                        ],
+                        'requestBody' => [
+                            'required' => true,
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => [
+                                        'type' => 'object',
+                                        'properties' => [
+                                            'name' => [
+                                                'type' => 'string',
+                                                'description' => 'Nuevo nombre de la variante',
+                                                'example' => 'Color Azul'
+                                            ],
+                                            'price' => [
+                                                'type' => 'number',
+                                                'format' => 'float',
+                                                'description' => 'Nuevo precio de la variante',
+                                                'example' => 25.99
+                                            ],
+                                            'stock' => [
+                                                'type' => 'integer',
+                                                'description' => 'Nueva cantidad en stock de la variante',
+                                                'example' => 15
+                                            ],
+                                            'image' => [
+                                                'type' => 'string',
+                                                'description' => 'Nueva imagen de la variante',
+                                                'example' => 'imagen_azul.jpg'
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ],
+                        'responses' => [
+                            '200' => [
+                                'description' => 'Variante actualizada exitosamente',
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => [
+                                            'type' => 'object',
+                                            'properties' => [
+                                                'message' => [
+                                                    'type' => 'string',
+                                                    'example' => 'Variante actualizada exitosamente'
+                                                ]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ],
+                            '400' => [
+                                'description' => 'Datos de entrada inválidos',
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => [
+                                            'type' => 'object',
+                                            'properties' => [
+                                                'error' => [
+                                                    'type' => 'string',
+                                                    'example' => 'No se proporcionaron datos para actualizar'
+                                                ]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ],
+                            '422' => [
+                                'description' => 'Error de validación del dominio',
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => [
+                                            'type' => 'object',
+                                            'properties' => [
+                                                'error' => [
+                                                    'type' => 'string',
+                                                    'example' => 'Producto no encontrado'
+                                                ]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ],
+                            '500' => [
+                                'description' => 'Error interno del servidor',
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => [
+                                            'type' => 'object',
+                                            'properties' => [
+                                                'error' => [
+                                                    'type' => 'string'
+                                                ],
+                                                'trace' => [
+                                                    'type' => 'string'
                                                 ]
                                             ]
                                         ]
