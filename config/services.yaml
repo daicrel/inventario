@@ -4,6 +4,9 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    # Configuración de email
+    app.email.from: 'daicrela@gmail.com'
+    app.email.service: '%env(EMAIL_SERVICE)%'
 
 services:
     # default configuration for services in *this* file
@@ -23,7 +26,28 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
-    # Puerto/adaptador para envío de emails
+    # Configuración de servicios de email
+    App\Infrastructure\Notification\SmtpMailer:
+        arguments:
+            $fromEmail: '%app.email.from%'
+
+    App\Infrastructure\Notification\SesMailer:
+        arguments:
+            $fromEmail: '%app.email.from%'
+
+    App\Infrastructure\Notification\SendGridMailer:
+        arguments:
+            $fromEmail: '%app.email.from%'
+
+    # Factory para servicios de email
+    App\Infrastructure\Notification\EmailServiceFactory:
+        arguments:
+            $smtpMailer: '@App\Infrastructure\Notification\SmtpMailer'
+            $logMailer: '@App\Infrastructure\Notification\LogMailer'
+            $sesMailer: '@App\Infrastructure\Notification\SesMailer'
+            $sendGridMailer: '@App\Infrastructure\Notification\SendGridMailer'
+
+    # Puerto/adaptador para envío de emails (configuración dinámica)
     App\Domain\Notification\EmailSenderInterface: '@App\Infrastructure\Notification\SmtpMailer'
 
     # Puerto/adaptador para persistencia de productos

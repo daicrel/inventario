@@ -1,0 +1,39 @@
+# Configuración de servicios de email
+parameters:
+    # Configuración por defecto
+    app.email.from: '%env(EMAIL_FROM)%'
+    app.email.service: '%env(EMAIL_SERVICE)%'
+
+    # Configuración AWS SES
+    app.email.ses.region: '%env(AWS_SES_REGION)%'
+    app.email.ses.access_key: '%env(AWS_SES_ACCESS_KEY)%'
+    app.email.ses.secret_key: '%env(AWS_SES_SECRET_KEY)%'
+
+    # Configuración SendGrid
+    app.email.sendgrid.api_key: '%env(SENDGRID_API_KEY)%'
+
+services:
+    # Configuración AWS SES Client
+    Aws\Ses\SesClient:
+        arguments:
+            $config:
+                region: '%app.email.ses.region%'
+                credentials:
+                    key: '%app.email.ses.access_key%'
+                    secret: '%app.email.ses.secret_key%'
+
+    # Configuración SendGrid Client
+    SendGrid:
+        arguments:
+            $apiKey: '%app.email.sendgrid.api_key%'
+
+    # Configuración de servicios de email
+    App\Infrastructure\Notification\SesMailer:
+        arguments:
+            $sesClient: '@Aws\Ses\SesClient'
+            $fromEmail: '%app.email.from%'
+
+    App\Infrastructure\Notification\SendGridMailer:
+        arguments:
+            $sendGrid: '@SendGrid'
+            $fromEmail: '%app.email.from%' 
