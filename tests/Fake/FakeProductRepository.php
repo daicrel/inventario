@@ -41,4 +41,16 @@ class FakeProductRepository implements ProductRepository
         }
         return null;
     }
+
+    public function delete(Product $product): void
+    {
+        foreach ($this->products as $key => $p) {
+            if ((string)$p->getId() === (string)$product->getId()) {
+                unset($this->products[$key]);
+                // Reindexar el array para evitar huecos
+                $this->products = array_values($this->products);
+                break;
+            }
+        }
+    }
 }

@@ -73,6 +73,11 @@ class Product
         return $this->variants;
     }
 
+    public function clearVariants(): void
+    {
+        $this->variants->clear();
+    }
+
     public function getId(): ProductId
     {
         return new ProductId($this->id);
@@ -101,5 +106,31 @@ class Product
     public function getNameValue(): string
     {
         return $this->name;
+    }
+
+    public function updateName(ProductName $name): void
+    {
+        $this->name = (string)$name;
+    }
+
+    public function updateDescription(ProductDescription $description): void
+    {
+        $this->description = (string)$description;
+    }
+
+    public function updatePrice(float $price): void
+    {
+        if ($price < 0) {
+            throw new \InvalidArgumentException('El precio no puede ser negativo');
+        }
+        $this->price = $price;
+    }
+
+    public function updateStock(int $stock): void
+    {
+        if ($stock < 0) {
+            throw new \InvalidArgumentException('El stock no puede ser negativo');
+        }
+        $this->stock = $stock;
     }
 }

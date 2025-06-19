@@ -117,4 +117,9 @@ class Variant
     {
         $this->image = $newImage;
     }
+
+    public function changeName(ProductName $newName): void
+    {
+        $this->name = (string) $newName;
+    }
 }

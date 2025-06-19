@@ -44,4 +44,10 @@ class DoctrineProductRepository implements ProductRepository
     {
         return $this->repository->findOneBy(['name' => $name]);
     }
+
+    public function delete(Product $product): void
+    {
+        $this->em->remove($product);
+        $this->em->flush();
+    }
 }

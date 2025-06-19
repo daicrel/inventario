@@ -81,13 +81,38 @@ interface EmailSenderInterface
 }
 ```
 
-#### 3.2.2. Adaptador de Notificación Implementado
+#### 3.2.2. Adaptadores de Notificación Implementados
 
-- **SmtpMailer (SMTP)**
+- **a) SmtpMailer (SMTP)**
   - **Ubicación:** `src/Infrastructure/Notification/SmtpMailer.php`
   - **Tecnología:** Symfony Mailer + SMTP
-  - **Uso:** Producción
-  - **Configuración:** Activo en `config/services.yaml`
+  - **Uso:** Producción y desarrollo
+  - **Configuración:** Activo por defecto en `config/services.yaml`
+
+- **b) SesMailer (Amazon SES)**
+  - **Ubicación:** `src/Infrastructure/Notification/SesMailer.php`
+  - **Tecnología:** AWS SDK for PHP
+  - **Uso:** Producción (alta escalabilidad)
+  - **Configuración:** Requiere credenciales AWS en variables de entorno
+
+- **c) SendGridMailer (SendGrid)**
+  - **Ubicación:** `src/Infrastructure/Notification/SendGridMailer.php`
+  - **Tecnología:** SendGrid PHP SDK
+  - **Uso:** Producción (buena entrega)
+  - **Configuración:** Requiere API Key de SendGrid
+
+- **d) LogMailer (Desarrollo/Pruebas)**
+  - **Ubicación:** `src/Infrastructure/Notification/LogMailer.php`
+  - **Tecnología:** PSR-3 Logger
+  - **Uso:** Desarrollo y pruebas
+  - **Configuración:** Solo registra en logs, no envía emails reales
+
+#### 3.2.3. Factory para Gestión de Servicios
+
+- **EmailServiceFactory**
+  - **Ubicación:** `src/Infrastructure/Notification/EmailServiceFactory.php`
+  - **Propósito:** Facilita el cambio entre diferentes servicios de email
+  - **Uso:** Permite seleccionar dinámicamente el servicio a usar
 
 ## 4. Comunicación entre Capas
 
@@ -219,6 +244,18 @@ App\Domain\Product\Repository\ProductRepository: '@App\Infrastructure\Product\Re
 - `DoctrineProductRepository` (MySQL)
 - `InMemoryProductRepository` (Sesión)
 - `FakeProductRepository` (Memoria para tests)
+
+✅ **Implementa varios servicios de email usando una interfaz común:**
+- `SmtpMailer` (SMTP)
+- `SesMailer` (Amazon SES)
+- `SendGridMailer` (SendGrid)
+- `LogMailer` (Desarrollo/Pruebas)
+- Todos implementan `EmailSenderInterface`
+
+✅ **El listener del evento usa la interfaz, no la implementación concreta:**
+- `ProductCreatedListener` inyecta `EmailSenderInterface`
+- No depende de implementaciones específicas
+- Permite cambiar el servicio de email sin modificar el listener
 
 ✅ **Documenta cómo se comunican los puertos y adaptadores:**
 - Este documento explica la arquitectura

@@ -52,10 +52,14 @@ final class CreateProductHandler
         );
 
         foreach ($command->getVariants() as $variantData) {
+            // Generar variantId automáticamente
             $variantId = new VariantId(Uuid::uuid4()->toString());
             $variantName = new ProductName($variantData['name']);
-            $variantPrice = new Price($variantData['price']);
-            $variantStock = $variantData['stock'];
+            // Usar el precio específico de la variante
+            $variantPrice = new Price($variantData['price'] ?? $command->getPrice());
+            // Usar el stock específico de la variante
+            $variantStock = $variantData['stock'] ?? $command->getStock();
+            // Usar la imagen específica de la variante
             $variantImage = $variantData['image'] ?? null;
 
             $variant = new Variant(
