@@ -1,6 +1,12 @@
-controllers:
-    resource: '../src/Infrastructure/Product/Controller/'
+commands:
+    resource: '../src/Infrastructure/Product/Controller/Commands/'
     type: attribute
+    prefix: /commands
+
+queries:
+    resource: '../src/Infrastructure/Product/Controller/Queries/'
+    type: attribute
+    prefix: /queries
 
 api_controllers:
     resource: '../src/Controller/'

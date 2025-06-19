@@ -1,8 +1,8 @@
 <?php
 
-// src/Infrastructure/Product/Controller/ProductController.php
+// src/Infrastructure/Product/Controller/Commands/ProductController.php
 
-namespace App\Infrastructure\Product\Controller;
+namespace App\Infrastructure\Product\Controller\Commands;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,22 +18,21 @@ use App\Application\Product\Handler\DeleteProductHandler;
 use App\Application\Product\Handler\UpdateVariantHandler;
 use Ramsey\Uuid\Uuid;
 use OpenApi\Annotations as OA;
-use App\Domain\Product\Repository\ProductRepository;
 
 /**
  * @OA\Tag(
- *     name="Productos",
- *     description="Operaciones para gestionar productos en el inventario"
+ *     name="Comandos de Productos",
+ *     description="Operaciones de escritura para gestionar productos en el inventario (CQRS - Commands)"
  * )
  */
 class ProductController extends AbstractController
 {
     /**
      * @OA\Post(
-     *     path="/products",
+     *     path="/commands/products",
      *     summary="Crear un nuevo producto",
-     *     description="Crea un nuevo producto con sus variantes en el sistema de inventario",
-     *     tags={"Productos"},
+     *     description="Crea un nuevo producto con sus variantes en el sistema de inventario usando CQRS",
+     *     tags={"Comandos de Productos"},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -130,179 +129,11 @@ class ProductController extends AbstractController
     }
 
     /**
-     * @OA\Get(
-     *     path="/products",
-     *     summary="Listar todos los productos",
-     *     description="Obtiene la lista completa de productos con sus variantes",
-     *     tags={"Productos"},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Lista de productos obtenida exitosamente",
-     *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(
-     *                 type="object",
-     *                 @OA\Property(property="id", type="string", format="uuid", example="550e8400-e29b-41d4-a716-446655440000"),
-     *                 @OA\Property(property="name", type="string", example="Laptop Dell XPS 13"),
-     *                 @OA\Property(property="description", type="string", example="Laptop ultrabook con pantalla de 13 pulgadas"),
-     *                 @OA\Property(property="price", type="number", format="float", example=1299.99),
-     *                 @OA\Property(property="stock", type="integer", example=50),
-     *                 @OA\Property(
-     *                     property="variants",
-     *                     type="array",
-     *                     @OA\Items(
-     *                         type="object",
-     *                         @OA\Property(property="id", type="string", format="uuid", example="550e8400-e29b-41d4-a716-446655440001"),
-     *                         @OA\Property(property="name", type="string", example="Blanco - Talla 42"),
-     *                         @OA\Property(property="price", type="number", format="float", example=119.99),
-     *                         @OA\Property(property="stock", type="integer", example=40),
-     *                         @OA\Property(property="image", type="string", example="pegasus_blanco_42.jpg")
-     *                     )
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Error interno del servidor",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string"),
-     *             @OA\Property(property="trace", type="string")
-     *         )
-     *     )
-     * )
-     */
-    #[Route('/products', name: 'list_products', methods: ['GET'])]
-    public function list(ProductRepository $productRepository): JsonResponse
-    {
-        try {
-            $products = $productRepository->findAll();
-            
-            $data = [];
-            foreach ($products as $product) {
-                $variants = [];
-                foreach ($product->getVariants() as $variant) {
-                    $variants[] = [
-                        'id' => (string) $variant->getId(),
-                        'name' => (string) $variant->getName(),
-                        'price' => $variant->getPrice(),
-                        'stock' => $variant->getStock(),
-                        'image' => $variant->getImage()
-                    ];
-                }
-                
-                $data[] = [
-                    'id' => (string) $product->getId(),
-                    'name' => (string) $product->getName(),
-                    'description' => (string) $product->getDescription(),
-                    'price' => $product->price()->value(),
-                    'stock' => $product->getStock(),
-                    'variants' => $variants
-                ];
-            }
-            
-            return $this->json($data, 200);
-        } catch (\Throwable $e) {
-            return $this->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
-        }
-    }
-
-    /**
-     * @OA\Get(
-     *     path="/products/{id}",
-     *     summary="Obtener un producto específico",
-     *     description="Obtiene los datos de un producto específico con sus variantes por su ID",
-     *     tags={"Productos"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID único del producto",
-     *         @OA\Schema(type="string", format="uuid")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Producto obtenido exitosamente",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="id", type="string", format="uuid", example="550e8400-e29b-41d4-a716-446655440000"),
-     *             @OA\Property(property="name", type="string", example="Laptop Dell XPS 13"),
-     *             @OA\Property(property="description", type="string", example="Laptop ultrabook con pantalla de 13 pulgadas"),
-     *             @OA\Property(property="price", type="number", format="float", example=1299.99),
-     *             @OA\Property(property="stock", type="integer", example=50),
-     *             @OA\Property(
-     *                 property="variants",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     type="object",
-     *                     @OA\Property(property="id", type="string", format="uuid", example="550e8400-e29b-41d4-a716-446655440001"),
-     *                     @OA\Property(property="name", type="string", example="Blanco - Talla 42"),
-     *                     @OA\Property(property="price", type="number", format="float", example=119.99),
-     *                     @OA\Property(property="stock", type="integer", example=40),
-     *                     @OA\Property(property="image", type="string", example="pegasus_blanco_42.jpg")
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Producto no encontrado",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="Producto no encontrado")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Error interno del servidor",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string"),
-     *             @OA\Property(property="trace", type="string")
-     *         )
-     *     )
-     * )
-     */
-    #[Route('/products/{id}', name: 'get_product', methods: ['GET'])]
-    public function get(string $id, ProductRepository $productRepository): JsonResponse
-    {
-        try {
-            $product = $productRepository->findById($id);
-            
-            if (!$product) {
-                return $this->json(['error' => 'Producto no encontrado'], 404);
-            }
-            
-            $variants = [];
-            foreach ($product->getVariants() as $variant) {
-                $variants[] = [
-                    'id' => (string) $variant->getId(),
-                    'name' => (string) $variant->getName(),
-                    'price' => $variant->getPrice(),
-                    'stock' => $variant->getStock(),
-                    'image' => $variant->getImage()
-                ];
-            }
-            
-            $data = [
-                'id' => (string) $product->getId(),
-                'name' => (string) $product->getName(),
-                'description' => (string) $product->getDescription(),
-                'price' => $product->price()->value(),
-                'stock' => $product->getStock(),
-                'variants' => $variants
-            ];
-            
-            return $this->json($data, 200);
-        } catch (\Throwable $e) {
-            return $this->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
-        }
-    }
-
-    /**
      * @OA\Put(
-     *     path="/products/{id}",
+     *     path="/commands/products/{id}",
      *     summary="Actualizar un producto existente",
-     *     description="Actualiza los datos de un producto existente por su ID",
-     *     tags={"Productos"},
+     *     description="Actualiza los datos de un producto existente por su ID usando CQRS",
+     *     tags={"Comandos de Productos"},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -313,18 +144,20 @@ class ProductController extends AbstractController
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             @OA\Property(property="name", type="string", description="Nuevo nombre del producto", example="Laptop Dell XPS 13 Actualizada"),
-     *             @OA\Property(property="description", type="string", description="Nueva descripción del producto"),
-     *             @OA\Property(property="price", type="number", format="float", description="Nuevo precio del producto"),
-     *             @OA\Property(property="stock", type="integer", description="Nueva cantidad en stock"),
+     *             @OA\Property(property="name", type="string", description="Nuevo nombre del producto", example="Laptop Dell XPS 13 Pro"),
+     *             @OA\Property(property="description", type="string", description="Nueva descripción del producto", example="Laptop ultrabook premium con pantalla de 13 pulgadas y procesador Intel i7"),
+     *             @OA\Property(property="price", type="number", format="float", description="Nuevo precio del producto", example=1499.99),
+     *             @OA\Property(property="stock", type="integer", description="Nueva cantidad en stock", example=25),
      *             @OA\Property(
      *                 property="variants",
      *                 type="array",
      *                 description="Nueva lista de variantes del producto",
      *                 @OA\Items(
      *                     type="object",
-     *                     @OA\Property(property="name", type="string"),
-     *                     @OA\Property(property="value", type="string")
+     *                     @OA\Property(property="name", type="string", description="Nombre de la variante", example="Plata - 512GB SSD"),
+     *                     @OA\Property(property="price", type="number", format="float", description="Precio de la variante", example=1599.99),
+     *                     @OA\Property(property="stock", type="integer", description="Stock de la variante", example=15),
+     *                     @OA\Property(property="image", type="string", description="Imagen de la variante", example="xps13_plata_512gb.jpg")
      *                 )
      *             )
      *         )
@@ -391,10 +224,10 @@ class ProductController extends AbstractController
 
     /**
      * @OA\Delete(
-     *     path="/products/{id}",
+     *     path="/commands/products/{id}",
      *     summary="Eliminar un producto",
-     *     description="Elimina un producto del sistema por su ID",
-     *     tags={"Productos"},
+     *     description="Elimina un producto del sistema por su ID usando CQRS",
+     *     tags={"Comandos de Productos"},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -443,10 +276,10 @@ class ProductController extends AbstractController
 
     /**
      * @OA\Put(
-     *     path="/products/{productId}/variants/{variantId}",
+     *     path="/commands/products/{productId}/variants/{variantId}",
      *     summary="Actualizar una variante de producto",
-     *     description="Actualiza los datos de una variante específica de un producto",
-     *     tags={"Productos"},
+     *     description="Actualiza los datos de una variante específica de un producto usando CQRS",
+     *     tags={"Comandos de Productos"},
      *     @OA\Parameter(
      *         name="productId",
      *         in="path",

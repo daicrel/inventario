@@ -1,84 +1,144 @@
-# Operaciones CRUD de Productos
+# Operaciones de Producto
 
-Este documento describe las operaciones disponibles para gestionar productos en el sistema de inventario.
+## Endpoints Disponibles
 
-## Arquitectura
+### Comandos (Commands)
 
-El sistema sigue los principios de **Arquitectura Hexagonal (DDD)**:
+#### Crear Producto
+**Endpoint**: `POST /commands/products`
 
-- **Capa de Aplicación**: Contiene los comandos y handlers
-- **Capa de Dominio**: Contiene las entidades y puertos (interfaces)
-- **Capa de Infraestructura**: Contiene las implementaciones concretas
+**Descripción**: Crea un nuevo producto con sus variantes en el sistema.
 
-## Operaciones Disponibles
-
-### 1. Crear Producto
-
-**Endpoint**: `POST /products`
-
-**Comando**: `CreateProductCommand`
-**Handler**: `CreateProductHandler`
-
-**Ejemplo de request**:
+**Cuerpo de la petición**:
 ```json
 {
-    "name": "Laptop Gaming",
-    "description": "Laptop para gaming de alto rendimiento",
+    "name": "Laptop Dell XPS 13",
+    "description": "Laptop ultrabook con pantalla de 13 pulgadas",
     "price": 1299.99,
-    "stock": 10,
+    "stock": 50,
     "variants": [
         {
-            "name": "16GB RAM",
-            "price": 1299.99,
-            "stock": 5,
-            "image": "laptop-16gb.jpg"
-        },
-        {
-            "name": "32GB RAM",
-            "price": 1499.99,
-            "stock": 5,
-            "image": "laptop-32gb.jpg"
+            "name": "Blanco - Talla 42",
+            "price": 119.99,
+            "stock": 40,
+            "image": "pegasus_blanco_42.jpg"
         }
     ]
 }
 ```
 
-### 2. Actualizar Producto
-
-**Endpoint**: `PUT /products/{id}`
-
-**Comando**: `UpdateProductCommand`
-**Handler**: `UpdateProductHandler`
-
-**Características**:
-- Todos los campos son opcionales
-- Solo se actualizan los campos proporcionados
-- Validación de nombres únicos
-- Actualización completa de variantes
-
-**Ejemplo de request**:
+**Respuesta exitosa** (201):
 ```json
 {
-    "name": "Laptop Gaming Pro",
-    "price": 1399.99,
-    "stock": 15
+    "message": "Producto creado exitosamente"
 }
 ```
 
-### 3. Eliminar Producto
+#### Actualizar Producto
+**Endpoint**: `PUT /commands/products/{id}`
 
-**Endpoint**: `DELETE /products/{id}`
+**Descripción**: Actualiza los datos de un producto existente.
 
-**Comando**: `DeleteProductCommand`
-**Handler**: `DeleteProductHandler`
+**Cuerpo de la petición**:
+```json
+{
+    "name": "Laptop Dell XPS 13 Actualizada",
+    "description": "Nueva descripción del producto",
+    "price": 1399.99,
+    "stock": 60
+}
+```
 
-**Características**:
-- Elimina el producto y todas sus variantes
-- Validación de existencia del producto
+**Respuesta exitosa** (200):
+```json
+{
+    "message": "Producto actualizado exitosamente"
+}
+```
 
-## Puertos y Adaptadores
+#### Eliminar Producto
+**Endpoint**: `DELETE /commands/products/{id}`
 
-### Puerto (Interfaz)
+**Descripción**: Elimina un producto del sistema.
+
+**Respuesta exitosa** (200):
+```json
+{
+    "message": "Producto eliminado exitosamente"
+}
+```
+
+### Consultas (Queries)
+
+#### Listar Productos
+**Endpoint**: `GET /queries/products`
+
+**Descripción**: Obtiene la lista completa de productos con sus variantes.
+
+**Respuesta exitosa** (200):
+```json
+[
+    {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "name": "Laptop Dell XPS 13",
+        "description": "Laptop ultrabook con pantalla de 13 pulgadas",
+        "price": 1299.99,
+        "stock": 50,
+        "variants": [
+            {
+                "id": "550e8400-e29b-41d4-a716-446655440001",
+                "name": "Blanco - Talla 42",
+                "price": 119.99,
+                "stock": 40,
+                "image": "pegasus_blanco_42.jpg"
+            }
+        ]
+    }
+]
+```
+
+#### Obtener Producto por ID
+**Endpoint**: `GET /queries/products/{id}`
+
+**Descripción**: Obtiene los datos de un producto específico con sus variantes.
+
+**Respuesta exitosa** (200):
+```json
+{
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Laptop Dell XPS 13",
+    "description": "Laptop ultrabook con pantalla de 13 pulgadas",
+    "price": 1299.99,
+    "stock": 50,
+    "variants": [
+        {
+            "id": "550e8400-e29b-41d4-a716-446655440001",
+            "name": "Blanco - Talla 42",
+            "price": 119.99,
+            "stock": 40,
+            "image": "pegasus_blanco_42.jpg"
+        }
+    ]
+}
+```
+
+## Arquitectura
+
+### Patrón CQRS
+La API implementa el patrón **Command Query Responsibility Segregation (CQRS)**:
+
+- **Commands** (`/commands/products`): Operaciones de escritura (POST, PUT, DELETE)
+- **Queries** (`/queries/products`): Operaciones de lectura (GET)
+
+### Separación de Responsabilidades
+- **ProductController**: Maneja todos los comandos
+- **ProductQueryController**: Maneja todas las consultas
+- **Handlers**: Lógica de aplicación específica para cada operación
+- **DTOs**: Estructuras de datos optimizadas para respuestas
+
+## Repositorio
+
+### Interface
 ```php
 interface ProductRepository
 {

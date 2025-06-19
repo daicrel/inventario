@@ -27,254 +27,343 @@ use Ramsey\Uuid\Uuid;
 class ProductTestController extends AbstractController
 {
     /**
-     * Test: Crear un producto usando el endpoint POST /products
+     * Test: Crear un producto usando el endpoint POST /commands/products
      */
-    #[Route('/test/product/create', name: 'test_create_product', methods: ['POST'])]
-    public function testCreateProduct(Request $request, HttpKernelInterface $httpKernel): JsonResponse
+    public function testCreateProduct(): JsonResponse
     {
-        // JSON de prueba para crear un producto
-        $testData = [
-            'name' => 'Zapatillas Nike Air Max',
-            'description' => 'Zapatillas deportivas de alta calidad',
-            'price' => 129.99,
-            'stock' => 25,
+        $productData = [
+            'name' => 'Producto de Prueba',
+            'description' => 'Descripción del producto de prueba',
+            'price' => 29.99,
+            'stock' => 10,
             'variants' => [
                 [
-                    'name' => 'Blanco - Talla 42',
-                    'price' => 129.99,
-                    'stock' => 10,
-                    'image' => 'nike_airmax_blanco_42.jpg'
-                ],
-                [
-                    'name' => 'Negro - Talla 43',
-                    'price' => 129.99,
-                    'stock' => 8,
-                    'image' => 'nike_airmax_negro_43.jpg'
+                    'name' => 'Variante 1',
+                    'price' => 31.99,
+                    'stock' => 5,
+                    'image' => 'imagen1.jpg'
                 ]
             ]
         ];
 
-        // Crear una petición interna al endpoint real
         $subRequest = Request::create(
-            '/products',
+            '/commands/products',
             'POST',
             [],
             [],
             [],
             ['CONTENT_TYPE' => 'application/json'],
-            json_encode($testData)
+            json_encode($productData)
         );
 
-        $response = $httpKernel->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
+        $response = $this->forward($subRequest);
 
         return $this->json([
-            'test' => 'Crear producto',
-            'endpoint' => 'POST /products',
-            'data_sent' => $testData,
-            'response' => json_decode($response->getContent(), true),
-            'status_code' => $response->getStatusCode()
+            'success' => true,
+            'message' => 'Producto creado exitosamente',
+            'endpoint' => 'POST /commands/products',
+            'response' => json_decode($response->getContent(), true)
         ]);
     }
 
     /**
-     * Test: Listar productos usando el endpoint GET /products
+     * Test: Listar productos usando el endpoint GET /queries/products
      */
-    #[Route('/test/product/list', name: 'test_list_products', methods: ['GET'])]
-    public function testListProducts(HttpKernelInterface $httpKernel): JsonResponse
+    public function testListProducts(): JsonResponse
     {
-        // Crear una petición interna al endpoint real
-        $subRequest = Request::create('/products', 'GET');
-
-        $response = $httpKernel->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
+        $subRequest = Request::create('/queries/products', 'GET');
+        $response = $this->forward($subRequest);
 
         return $this->json([
-            'test' => 'Listar productos',
-            'endpoint' => 'GET /products',
-            'response' => json_decode($response->getContent(), true),
-            'status_code' => $response->getStatusCode()
+            'success' => true,
+            'message' => 'Productos listados exitosamente',
+            'endpoint' => 'GET /queries/products',
+            'response' => json_decode($response->getContent(), true)
         ]);
     }
 
     /**
-     * Test: Obtener un producto específico usando el endpoint GET /products/{id}
+     * Test: Obtener un producto específico usando el endpoint GET /queries/products/{id}
      */
-    #[Route('/test/product/get/{id}', name: 'test_get_product', methods: ['GET'])]
-    public function testGetProduct(string $id, HttpKernelInterface $httpKernel): JsonResponse
+    public function testGetProduct(): JsonResponse
     {
-        // Crear una petición interna al endpoint real
-        $subRequest = Request::create("/products/$id", 'GET');
-
-        $response = $httpKernel->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
-
-        return $this->json([
-            'test' => 'Obtener producto específico',
-            'endpoint' => "GET /products/$id",
-            'product_id' => $id,
-            'response' => json_decode($response->getContent(), true),
-            'status_code' => $response->getStatusCode()
-        ]);
-    }
-
-    /**
-     * Test: Actualizar un producto usando el endpoint PUT /products/{id}
-     */
-    #[Route('/test/product/update/{id}', name: 'test_update_product', methods: ['PUT'])]
-    public function testUpdateProduct(string $id, HttpKernelInterface $httpKernel): JsonResponse
-    {
-        // JSON de prueba para actualizar un producto
-        $testData = [
-            'name' => 'Zapatillas Nike Air Max Actualizadas',
-            'description' => 'Zapatillas deportivas actualizadas con nueva tecnología',
-            'price' => 139.99,
-            'stock' => 30
+        // Primero crear un producto para obtener su ID
+        $productData = [
+            'name' => 'Producto para Obtener',
+            'description' => 'Producto para probar GET',
+            'price' => 19.99,
+            'stock' => 5,
+            'variants' => []
         ];
 
-        // Crear una petición interna al endpoint real
+        $createRequest = Request::create(
+            '/commands/products',
+            'POST',
+            [],
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode($productData)
+        );
+
+        $createResponse = $this->forward($createRequest);
+        $createData = json_decode($createResponse->getContent(), true);
+
+        // Ahora obtener el producto creado
+        $subRequest = Request::create("/queries/products/$id", 'GET');
+        $response = $this->forward($subRequest);
+
+        return $this->json([
+            'success' => true,
+            'message' => 'Producto obtenido exitosamente',
+            'endpoint' => "GET /queries/products/$id",
+            'response' => json_decode($response->getContent(), true)
+        ]);
+    }
+
+    /**
+     * Test: Actualizar un producto usando el endpoint PUT /commands/products/{id}
+     */
+    public function testUpdateProduct(): JsonResponse
+    {
+        // Primero crear un producto
+        $productData = [
+            'name' => 'Producto Original',
+            'description' => 'Producto para actualizar',
+            'price' => 15.99,
+            'stock' => 3,
+            'variants' => []
+        ];
+
+        $createRequest = Request::create(
+            '/commands/products',
+            'POST',
+            [],
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode($productData)
+        );
+
+        $createResponse = $this->forward($createRequest);
+        $createData = json_decode($createResponse->getContent(), true);
+
+        // Actualizar el producto
+        $updateData = [
+            'name' => 'Producto Actualizado',
+            'description' => 'Producto actualizado exitosamente',
+            'price' => 25.99,
+            'stock' => 8
+        ];
+
         $subRequest = Request::create(
-            "/products/$id",
+            "/commands/products/$id",
             'PUT',
             [],
             [],
             [],
             ['CONTENT_TYPE' => 'application/json'],
-            json_encode($testData)
+            json_encode($updateData)
         );
 
-        $response = $httpKernel->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
+        $response = $this->forward($subRequest);
 
         return $this->json([
-            'test' => 'Actualizar producto',
-            'endpoint' => "PUT /products/$id",
-            'product_id' => $id,
-            'data_sent' => $testData,
-            'response' => json_decode($response->getContent(), true),
-            'status_code' => $response->getStatusCode()
+            'success' => true,
+            'message' => 'Producto actualizado exitosamente',
+            'endpoint' => "PUT /commands/products/$id",
+            'response' => json_decode($response->getContent(), true)
         ]);
     }
 
     /**
-     * Test: Eliminar un producto usando el endpoint DELETE /products/{id}
+     * Test: Eliminar un producto usando el endpoint DELETE /commands/products/{id}
      */
-    #[Route('/test/product/delete/{id}', name: 'test_delete_product', methods: ['DELETE'])]
-    public function testDeleteProduct(string $id, HttpKernelInterface $httpKernel): JsonResponse
+    public function testDeleteProduct(): JsonResponse
     {
-        // Crear una petición interna al endpoint real
-        $subRequest = Request::create("/products/$id", 'DELETE');
-
-        $response = $httpKernel->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
-
-        return $this->json([
-            'test' => 'Eliminar producto',
-            'endpoint' => "DELETE /products/$id",
-            'product_id' => $id,
-            'response' => json_decode($response->getContent(), true),
-            'status_code' => $response->getStatusCode()
-        ]);
-    }
-
-    /**
-     * Test: Actualizar una variante usando el endpoint PUT /products/{productId}/variants/{variantId}
-     */
-    #[Route('/test/product/{productId}/variants/{variantId}/update', name: 'test_update_variant', methods: ['PUT'])]
-    public function testUpdateVariant(string $productId, string $variantId, HttpKernelInterface $httpKernel): JsonResponse
-    {
-        // JSON de prueba para actualizar una variante
-        $testData = [
-            'name' => 'Blanco - Talla 42 Actualizada',
-            'price' => 135.99,
-            'stock' => 12,
-            'image' => 'nike_airmax_blanco_42_actualizada.jpg'
+        // Primero crear un producto
+        $productData = [
+            'name' => 'Producto a Eliminar',
+            'description' => 'Producto que será eliminado',
+            'price' => 9.99,
+            'stock' => 1,
+            'variants' => []
         ];
 
-        // Crear una petición interna al endpoint real
-        $subRequest = Request::create(
-            "/products/$productId/variants/$variantId",
-            'PUT',
+        $createRequest = Request::create(
+            '/commands/products',
+            'POST',
             [],
             [],
             [],
             ['CONTENT_TYPE' => 'application/json'],
-            json_encode($testData)
+            json_encode($productData)
         );
 
-        $response = $httpKernel->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
+        $createResponse = $this->forward($createRequest);
+        $createData = json_decode($createResponse->getContent(), true);
+
+        // Eliminar el producto
+        $subRequest = Request::create("/commands/products/$id", 'DELETE');
+        $response = $this->forward($subRequest);
 
         return $this->json([
-            'test' => 'Actualizar variante',
-            'endpoint' => "PUT /products/$productId/variants/$variantId",
-            'product_id' => $productId,
-            'variant_id' => $variantId,
-            'data_sent' => $testData,
-            'response' => json_decode($response->getContent(), true),
-            'status_code' => $response->getStatusCode()
+            'success' => true,
+            'message' => 'Producto eliminado exitosamente',
+            'endpoint' => "DELETE /commands/products/$id",
+            'response' => json_decode($response->getContent(), true)
         ]);
     }
 
     /**
-     * Test completo: Crear, listar, obtener, actualizar y eliminar un producto
+     * Test: Actualizar una variante usando el endpoint PUT /commands/products/{productId}/variants/{variantId}
      */
-    #[Route('/test/product/full-test', name: 'test_full_product_cycle', methods: ['GET'])]
-    public function testFullProductCycle(HttpKernelInterface $httpKernel): JsonResponse
+    public function testUpdateVariant(): JsonResponse
     {
-        $results = [];
-
-        // 1. Crear producto
-        $createData = [
-            'name' => 'Camiseta de Prueba',
-            'description' => 'Camiseta para testing',
-            'price' => 29.99,
-            'stock' => 15,
+        // Primero crear un producto con variantes
+        $productData = [
+            'name' => 'Producto con Variantes',
+            'description' => 'Producto para probar actualización de variantes',
+            'price' => 39.99,
+            'stock' => 10,
             'variants' => [
                 [
-                    'name' => 'Azul - M',
-                    'price' => 29.99,
-                    'stock' => 8,
-                    'image' => 'camiseta_azul_m.jpg'
+                    'name' => 'Variante Original',
+                    'price' => 41.99,
+                    'stock' => 5,
+                    'image' => 'imagen_original.jpg'
                 ]
             ]
         ];
 
         $createRequest = Request::create(
-            '/products',
+            '/commands/products',
             'POST',
             [],
             [],
             [],
             ['CONTENT_TYPE' => 'application/json'],
-            json_encode($createData)
+            json_encode($productData)
         );
 
-        $createResponse = $httpKernel->handle($createRequest, HttpKernelInterface::SUB_REQUEST);
-        $results['create'] = [
-            'status' => $createResponse->getStatusCode(),
-            'response' => json_decode($createResponse->getContent(), true)
+        $createResponse = $this->forward($createRequest);
+        $createData = json_decode($createResponse->getContent(), true);
+
+        // Obtener el producto para acceder a las variantes
+        $listRequest = Request::create('/queries/products', 'GET');
+        $listResponse = $this->forward($listRequest);
+        $products = json_decode($listResponse->getContent(), true);
+
+        $productId = null;
+        $variantId = null;
+
+        foreach ($products as $product) {
+            if ($product['name'] === 'Producto con Variantes') {
+                $productId = $product['id'];
+                if (!empty($product['variants'])) {
+                    $variantId = $product['variants'][0]['id'];
+                }
+                break;
+            }
+        }
+
+        if (!$productId || !$variantId) {
+            return $this->json(['error' => 'No se pudo encontrar el producto o variante'], 404);
+        }
+
+        // Actualizar la variante
+        $updateData = [
+            'name' => 'Variante Actualizada',
+            'price' => 45.99,
+            'stock' => 8,
+            'image' => 'imagen_actualizada.jpg'
         ];
 
-        // 2. Listar productos para obtener el ID
-        $listRequest = Request::create('/products', 'GET');
-        $listResponse = $httpKernel->handle($listRequest, HttpKernelInterface::SUB_REQUEST);
-        $products = json_decode($listResponse->getContent(), true);
-        
-        if (!empty($products)) {
-            $productId = $products[0]['id'];
-            $variantId = !empty($products[0]['variants']) ? $products[0]['variants'][0]['id'] : null;
+        $subRequest = Request::create(
+            "/commands/products/$productId/variants/$variantId",
+            'PUT',
+            [],
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode($updateData)
+        );
 
-            // 3. Obtener producto específico
-            $getRequest = Request::create("/products/$productId", 'GET');
-            $getResponse = $httpKernel->handle($getRequest, HttpKernelInterface::SUB_REQUEST);
-            $results['get'] = [
-                'status' => $getResponse->getStatusCode(),
-                'response' => json_decode($getResponse->getContent(), true)
-            ];
+        $response = $this->forward($subRequest);
+
+        return $this->json([
+            'success' => true,
+            'message' => 'Variante actualizada exitosamente',
+            'endpoint' => "PUT /commands/products/$productId/variants/$variantId",
+            'response' => json_decode($response->getContent(), true)
+        ]);
+    }
+
+    /**
+     * Test completo del flujo CRUD
+     */
+    public function testCompleteCrudFlow(): JsonResponse
+    {
+        $results = [];
+
+        // 1. Crear producto
+        $productData = [
+            'name' => 'Producto CRUD Test',
+            'description' => 'Producto para probar flujo completo',
+            'price' => 49.99,
+            'stock' => 15,
+            'variants' => [
+                [
+                    'name' => 'Variante CRUD',
+                    'price' => 51.99,
+                    'stock' => 7,
+                    'image' => 'crud_variant.jpg'
+                ]
+            ]
+        ];
+
+        $createRequest = Request::create(
+            '/commands/products',
+            'POST',
+            [],
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode($productData)
+        );
+
+        $createResponse = $this->forward($createRequest);
+        $results['create'] = json_decode($createResponse->getContent(), true);
+
+        // 2. Listar productos
+        $listRequest = Request::create('/queries/products', 'GET');
+        $listResponse = $this->forward($listRequest);
+        $products = json_decode($listResponse->getContent(), true);
+        $results['list'] = $products;
+
+        // 3. Obtener producto específico
+        $productId = null;
+        foreach ($products as $product) {
+            if ($product['name'] === 'Producto CRUD Test') {
+                $productId = $product['id'];
+                break;
+            }
+        }
+
+        if ($productId) {
+            $getRequest = Request::create("/queries/products/$productId", 'GET');
+            $getResponse = $this->forward($getRequest);
+            $results['get'] = json_decode($getResponse->getContent(), true);
 
             // 4. Actualizar producto
             $updateData = [
-                'name' => 'Camiseta de Prueba Actualizada',
-                'price' => 34.99
+                'name' => 'Producto CRUD Actualizado',
+                'price' => 59.99,
+                'stock' => 20
             ];
 
             $updateRequest = Request::create(
-                "/products/$productId",
+                "/commands/products/$productId",
                 'PUT',
                 [],
                 [],
@@ -283,49 +372,18 @@ class ProductTestController extends AbstractController
                 json_encode($updateData)
             );
 
-            $updateResponse = $httpKernel->handle($updateRequest, HttpKernelInterface::SUB_REQUEST);
-            $results['update'] = [
-                'status' => $updateResponse->getStatusCode(),
-                'response' => json_decode($updateResponse->getContent(), true)
-            ];
+            $updateResponse = $this->forward($updateRequest);
+            $results['update'] = json_decode($updateResponse->getContent(), true);
 
-            // 5. Actualizar variante si existe
-            if ($variantId) {
-                $variantUpdateData = [
-                    'name' => 'Azul - M Actualizada',
-                    'price' => 34.99,
-                    'stock' => 10
-                ];
-
-                $variantRequest = Request::create(
-                    "/products/$productId/variants/$variantId",
-                    'PUT',
-                    [],
-                    [],
-                    [],
-                    ['CONTENT_TYPE' => 'application/json'],
-                    json_encode($variantUpdateData)
-                );
-
-                $variantResponse = $httpKernel->handle($variantRequest, HttpKernelInterface::SUB_REQUEST);
-                $results['update_variant'] = [
-                    'status' => $variantResponse->getStatusCode(),
-                    'response' => json_decode($variantResponse->getContent(), true)
-                ];
-            }
-
-            // 6. Eliminar producto
-            $deleteRequest = Request::create("/products/$productId", 'DELETE');
-            $deleteResponse = $httpKernel->handle($deleteRequest, HttpKernelInterface::SUB_REQUEST);
-            $results['delete'] = [
-                'status' => $deleteResponse->getStatusCode(),
-                'response' => json_decode($deleteResponse->getContent(), true)
-            ];
+            // 5. Eliminar producto
+            $deleteRequest = Request::create("/commands/products/$productId", 'DELETE');
+            $deleteResponse = $this->forward($deleteRequest);
+            $results['delete'] = json_decode($deleteResponse->getContent(), true);
         }
 
         return $this->json([
-            'test' => 'Ciclo completo de producto',
-            'description' => 'Crear, obtener, actualizar y eliminar un producto',
+            'success' => true,
+            'message' => 'Flujo CRUD completo ejecutado',
             'results' => $results
         ]);
     }

@@ -34,11 +34,11 @@ class SwaggerController extends AbstractController
                 ]
             ],
             'paths' => [
-                '/products' => [
+                '/commands/products' => [
                     'post' => [
-                        'tags' => ['Productos'],
-                        'summary' => 'Crear un nuevo producto',
-                        'description' => 'Crea un nuevo producto con sus variantes en el sistema de inventario',
+                        'tags' => ['Comandos de Productos'],
+                        'summary' => 'Crear un nuevo producto (Command)',
+                        'description' => 'Crea un nuevo producto con sus variantes en el sistema de inventario usando CQRS',
                         'requestBody' => [
                             'required' => true,
                             'content' => [
@@ -158,11 +158,13 @@ class SwaggerController extends AbstractController
                                 ]
                             ]
                         ]
-                    ],
+                    ]
+                ],
+                '/queries/products' => [
                     'get' => [
-                        'tags' => ['Productos'],
-                        'summary' => 'Listar todos los productos',
-                        'description' => 'Obtiene la lista completa de productos con sus variantes',
+                        'tags' => ['Consultas de Productos'],
+                        'summary' => 'Listar todos los productos (Query)',
+                        'description' => 'Obtiene la lista completa de productos con sus variantes usando CQRS',
                         'responses' => [
                             '200' => [
                                 'description' => 'Lista de productos obtenida exitosamente',
@@ -230,19 +232,102 @@ class SwaggerController extends AbstractController
                                         ]
                                     ]
                                 ]
-                            ],
-                            '500' => [
-                                'description' => 'Error interno del servidor',
+                            ]
+                        ]
+                    ]
+                ],
+                '/commands/products/{id}' => [
+                    'put' => [
+                        'tags' => ['Comandos de Productos'],
+                        'summary' => 'Actualizar un producto existente (Command)',
+                        'description' => 'Actualiza los datos de un producto existente por su ID usando CQRS',
+                        'parameters' => [
+                            [
+                                'name' => 'id',
+                                'in' => 'path',
+                                'required' => true,
+                                'description' => 'ID único del producto',
+                                'schema' => [
+                                    'type' => 'string',
+                                    'format' => 'uuid'
+                                ]
+                            ]
+                        ],
+                        'requestBody' => [
+                            'required' => true,
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => [
+                                        'type' => 'object',
+                                        'properties' => [
+                                            'name' => [
+                                                'type' => 'string',
+                                                'description' => 'Nuevo nombre del producto'
+                                            ],
+                                            'description' => [
+                                                'type' => 'string',
+                                                'description' => 'Nueva descripción del producto'
+                                            ],
+                                            'price' => [
+                                                'type' => 'number',
+                                                'format' => 'float',
+                                                'description' => 'Nuevo precio del producto'
+                                            ],
+                                            'stock' => [
+                                                'type' => 'integer',
+                                                'description' => 'Nueva cantidad en stock'
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ],
+                        'responses' => [
+                            '200' => [
+                                'description' => 'Producto actualizado exitosamente',
                                 'content' => [
                                     'application/json' => [
                                         'schema' => [
                                             'type' => 'object',
                                             'properties' => [
-                                                'error' => [
-                                                    'type' => 'string'
-                                                ],
-                                                'trace' => [
-                                                    'type' => 'string'
+                                                'message' => [
+                                                    'type' => 'string',
+                                                    'example' => 'Producto actualizado exitosamente'
+                                                ]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    'delete' => [
+                        'tags' => ['Comandos de Productos'],
+                        'summary' => 'Eliminar un producto (Command)',
+                        'description' => 'Elimina un producto del sistema por su ID usando CQRS',
+                        'parameters' => [
+                            [
+                                'name' => 'id',
+                                'in' => 'path',
+                                'required' => true,
+                                'description' => 'ID único del producto a eliminar',
+                                'schema' => [
+                                    'type' => 'string',
+                                    'format' => 'uuid'
+                                ]
+                            ]
+                        ],
+                        'responses' => [
+                            '200' => [
+                                'description' => 'Producto eliminado exitosamente',
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => [
+                                            'type' => 'object',
+                                            'properties' => [
+                                                'message' => [
+                                                    'type' => 'string',
+                                                    'example' => 'Producto eliminado exitosamente'
                                                 ]
                                             ]
                                         ]
@@ -252,11 +337,11 @@ class SwaggerController extends AbstractController
                         ]
                     ]
                 ],
-                '/products/{id}' => [
+                '/queries/products/{id}' => [
                     'get' => [
-                        'tags' => ['Productos'],
-                        'summary' => 'Obtener un producto específico',
-                        'description' => 'Obtiene los datos de un producto específico con sus variantes por su ID',
+                        'tags' => ['Consultas de Productos'],
+                        'summary' => 'Obtener un producto específico (Query)',
+                        'description' => 'Obtiene los datos de un producto específico con sus variantes por su ID usando CQRS',
                         'parameters' => [
                             [
                                 'name' => 'id',
@@ -369,112 +454,13 @@ class SwaggerController extends AbstractController
                                 ]
                             ]
                         ]
-                    ],
-                    'put' => [
-                        'tags' => ['Productos'],
-                        'summary' => 'Actualizar un producto existente',
-                        'description' => 'Actualiza los datos de un producto existente por su ID',
-                        'parameters' => [
-                            [
-                                'name' => 'id',
-                                'in' => 'path',
-                                'required' => true,
-                                'description' => 'ID único del producto',
-                                'schema' => [
-                                    'type' => 'string',
-                                    'format' => 'uuid'
-                                ]
-                            ]
-                        ],
-                        'requestBody' => [
-                            'required' => true,
-                            'content' => [
-                                'application/json' => [
-                                    'schema' => [
-                                        'type' => 'object',
-                                        'properties' => [
-                                            'name' => [
-                                                'type' => 'string',
-                                                'description' => 'Nuevo nombre del producto'
-                                            ],
-                                            'description' => [
-                                                'type' => 'string',
-                                                'description' => 'Nueva descripción del producto'
-                                            ],
-                                            'price' => [
-                                                'type' => 'number',
-                                                'format' => 'float',
-                                                'description' => 'Nuevo precio del producto'
-                                            ],
-                                            'stock' => [
-                                                'type' => 'integer',
-                                                'description' => 'Nueva cantidad en stock'
-                                            ]
-                                        ]
-                                    ]
-                                ]
-                            ]
-                        ],
-                        'responses' => [
-                            '200' => [
-                                'description' => 'Producto actualizado exitosamente',
-                                'content' => [
-                                    'application/json' => [
-                                        'schema' => [
-                                            'type' => 'object',
-                                            'properties' => [
-                                                'message' => [
-                                                    'type' => 'string',
-                                                    'example' => 'Producto actualizado exitosamente'
-                                                ]
-                                            ]
-                                        ]
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ],
-                    'delete' => [
-                        'tags' => ['Productos'],
-                        'summary' => 'Eliminar un producto',
-                        'description' => 'Elimina un producto del sistema por su ID',
-                        'parameters' => [
-                            [
-                                'name' => 'id',
-                                'in' => 'path',
-                                'required' => true,
-                                'description' => 'ID único del producto a eliminar',
-                                'schema' => [
-                                    'type' => 'string',
-                                    'format' => 'uuid'
-                                ]
-                            ]
-                        ],
-                        'responses' => [
-                            '200' => [
-                                'description' => 'Producto eliminado exitosamente',
-                                'content' => [
-                                    'application/json' => [
-                                        'schema' => [
-                                            'type' => 'object',
-                                            'properties' => [
-                                                'message' => [
-                                                    'type' => 'string',
-                                                    'example' => 'Producto eliminado exitosamente'
-                                                ]
-                                            ]
-                                        ]
-                                    ]
-                                ]
-                            ]
-                        ]
                     ]
                 ],
-                '/products/{productId}/variants/{variantId}' => [
+                '/commands/products/{productId}/variants/{variantId}' => [
                     'put' => [
-                        'tags' => ['Productos'],
-                        'summary' => 'Actualizar una variante de producto',
-                        'description' => 'Actualiza los datos de una variante específica de un producto',
+                        'tags' => ['Comandos de Productos'],
+                        'summary' => 'Actualizar una variante de producto (Command)',
+                        'description' => 'Actualiza los datos de una variante específica de un producto usando CQRS',
                         'parameters' => [
                             [
                                 'name' => 'productId',
