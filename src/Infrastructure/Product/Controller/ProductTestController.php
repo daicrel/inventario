@@ -4,460 +4,329 @@
 
 namespace App\Infrastructure\Product\Controller;
 
-use App\Domain\Product\Entity\Product;
-use App\Domain\Product\Entity\Variant;
-use App\Domain\Product\ValueObject\ProductId;
-use App\Domain\Product\ValueObject\ProductName;
-use App\Domain\Product\ValueObject\ProductDescription;
-use App\Domain\Product\ValueObject\VariantId;
-use App\Domain\Product\Repository\ProductRepository;
-use App\Application\Product\Command\CreateProductCommand;
-use App\Application\Product\Command\UpdateProductCommand;
-use App\Application\Product\Command\DeleteProductCommand;
-use App\Application\Product\Command\UpdateVariantCommand;
-use App\Application\Product\Handler\CreateProductHandler;
-use App\Application\Product\Handler\UpdateProductHandler;
-use App\Application\Product\Handler\DeleteProductHandler;
-use App\Application\Product\Handler\UpdateVariantHandler;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
-use OpenApi\Annotations as OA;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+use App\Application\Product\Handler\CreateProductHandler;
+use App\Application\Product\Handler\UpdateProductHandler;
+use App\Application\Product\Handler\DeleteProductHandler;
+use App\Application\Product\Handler\UpdateVariantHandler;
+use App\Application\Product\Command\CreateProductCommand;
+use App\Application\Product\Command\UpdateProductCommand;
+use App\Application\Product\Command\DeleteProductCommand;
+use App\Application\Product\Command\UpdateVariantCommand;
+use Ramsey\Uuid\Uuid;
 
 /**
- * @OA\Tag(
- *     name="Pruebas de Productos",
- *     description="Endpoints de prueba para productos (solo desarrollo)"
- * )
+ * Controlador de pruebas para testear los endpoints del ProductController
+ * Este controlador hace peticiones internas a los endpoints reales
  */
 class ProductTestController extends AbstractController
 {
     /**
-     * @OA\Get(
-     *     path="/test/product/list",
-     *     summary="Listar todos los productos",
-     *     description="Obtiene la lista completa de productos con sus variantes",
-     *     tags={"Pruebas de Productos"},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Lista de productos obtenida exitosamente",
-     *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(
-     *                 type="object",
-     *                 @OA\Property(property="id", type="string", format="uuid"),
-     *                 @OA\Property(property="name", type="string", example="Camiseta"),
-     *                 @OA\Property(property="description", type="string", example="Camiseta de algodón"),
-     *                 @OA\Property(property="price", type="number", format="float", example=19.99),
-     *                 @OA\Property(property="stock", type="integer", example=10),
-     *                 @OA\Property(
-     *                     property="variants",
-     *                     type="array",
-     *                     @OA\Items(
-     *                         type="object",
-     *                         @OA\Property(property="id", type="string", format="uuid"),
-     *                         @OA\Property(property="name", type="string", example="Camiseta Azul M"),
-     *                         @OA\Property(property="price", type="number", format="float", example=21.99),
-     *                         @OA\Property(property="stock", type="integer", example=5),
-     *                         @OA\Property(property="image", type="string", example="imagen.jpg")
-     *                     )
-     *                 )
-     *             )
-     *         )
-     *     )
-     * )
+     * Test: Crear un producto usando el endpoint POST /products
      */
-    #[Route('/test/product/list', name: 'test_product_list', methods: ['GET'])]
-    public function list(ProductRepository $productRepository): JsonResponse
+    #[Route('/test/product/create', name: 'test_create_product', methods: ['POST'])]
+    public function testCreateProduct(Request $request, HttpKernelInterface $httpKernel): JsonResponse
     {
-        $products = $productRepository->findAll();
+        // JSON de prueba para crear un producto
+        $testData = [
+            'name' => 'Zapatillas Nike Air Max',
+            'description' => 'Zapatillas deportivas de alta calidad',
+            'price' => 129.99,
+            'stock' => 25,
+            'variants' => [
+                [
+                    'name' => 'Blanco - Talla 42',
+                    'price' => 129.99,
+                    'stock' => 10,
+                    'image' => 'nike_airmax_blanco_42.jpg'
+                ],
+                [
+                    'name' => 'Negro - Talla 43',
+                    'price' => 129.99,
+                    'stock' => 8,
+                    'image' => 'nike_airmax_negro_43.jpg'
+                ]
+            ]
+        ];
 
-        $data = [];
-        foreach ($products as $product) {
-            $variants = [];
-            foreach ($product->getVariants() as $variant) {
-                $variants[] = [
-                    'id' => (string) $variant->getId(),
-                    'name' => (string) $variant->getName(),
-                    'price' => $variant->getPrice(),
-                    'stock' => $variant->getStock(),
-                    'image' => $variant->getImage()
+        // Crear una petición interna al endpoint real
+        $subRequest = Request::create(
+            '/products',
+            'POST',
+            [],
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode($testData)
+        );
+
+        $response = $httpKernel->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
+
+        return $this->json([
+            'test' => 'Crear producto',
+            'endpoint' => 'POST /products',
+            'data_sent' => $testData,
+            'response' => json_decode($response->getContent(), true),
+            'status_code' => $response->getStatusCode()
+        ]);
+    }
+
+    /**
+     * Test: Listar productos usando el endpoint GET /products
+     */
+    #[Route('/test/product/list', name: 'test_list_products', methods: ['GET'])]
+    public function testListProducts(HttpKernelInterface $httpKernel): JsonResponse
+    {
+        // Crear una petición interna al endpoint real
+        $subRequest = Request::create('/products', 'GET');
+
+        $response = $httpKernel->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
+
+        return $this->json([
+            'test' => 'Listar productos',
+            'endpoint' => 'GET /products',
+            'response' => json_decode($response->getContent(), true),
+            'status_code' => $response->getStatusCode()
+        ]);
+    }
+
+    /**
+     * Test: Obtener un producto específico usando el endpoint GET /products/{id}
+     */
+    #[Route('/test/product/get/{id}', name: 'test_get_product', methods: ['GET'])]
+    public function testGetProduct(string $id, HttpKernelInterface $httpKernel): JsonResponse
+    {
+        // Crear una petición interna al endpoint real
+        $subRequest = Request::create("/products/$id", 'GET');
+
+        $response = $httpKernel->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
+
+        return $this->json([
+            'test' => 'Obtener producto específico',
+            'endpoint' => "GET /products/$id",
+            'product_id' => $id,
+            'response' => json_decode($response->getContent(), true),
+            'status_code' => $response->getStatusCode()
+        ]);
+    }
+
+    /**
+     * Test: Actualizar un producto usando el endpoint PUT /products/{id}
+     */
+    #[Route('/test/product/update/{id}', name: 'test_update_product', methods: ['PUT'])]
+    public function testUpdateProduct(string $id, HttpKernelInterface $httpKernel): JsonResponse
+    {
+        // JSON de prueba para actualizar un producto
+        $testData = [
+            'name' => 'Zapatillas Nike Air Max Actualizadas',
+            'description' => 'Zapatillas deportivas actualizadas con nueva tecnología',
+            'price' => 139.99,
+            'stock' => 30
+        ];
+
+        // Crear una petición interna al endpoint real
+        $subRequest = Request::create(
+            "/products/$id",
+            'PUT',
+            [],
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode($testData)
+        );
+
+        $response = $httpKernel->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
+
+        return $this->json([
+            'test' => 'Actualizar producto',
+            'endpoint' => "PUT /products/$id",
+            'product_id' => $id,
+            'data_sent' => $testData,
+            'response' => json_decode($response->getContent(), true),
+            'status_code' => $response->getStatusCode()
+        ]);
+    }
+
+    /**
+     * Test: Eliminar un producto usando el endpoint DELETE /products/{id}
+     */
+    #[Route('/test/product/delete/{id}', name: 'test_delete_product', methods: ['DELETE'])]
+    public function testDeleteProduct(string $id, HttpKernelInterface $httpKernel): JsonResponse
+    {
+        // Crear una petición interna al endpoint real
+        $subRequest = Request::create("/products/$id", 'DELETE');
+
+        $response = $httpKernel->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
+
+        return $this->json([
+            'test' => 'Eliminar producto',
+            'endpoint' => "DELETE /products/$id",
+            'product_id' => $id,
+            'response' => json_decode($response->getContent(), true),
+            'status_code' => $response->getStatusCode()
+        ]);
+    }
+
+    /**
+     * Test: Actualizar una variante usando el endpoint PUT /products/{productId}/variants/{variantId}
+     */
+    #[Route('/test/product/{productId}/variants/{variantId}/update', name: 'test_update_variant', methods: ['PUT'])]
+    public function testUpdateVariant(string $productId, string $variantId, HttpKernelInterface $httpKernel): JsonResponse
+    {
+        // JSON de prueba para actualizar una variante
+        $testData = [
+            'name' => 'Blanco - Talla 42 Actualizada',
+            'price' => 135.99,
+            'stock' => 12,
+            'image' => 'nike_airmax_blanco_42_actualizada.jpg'
+        ];
+
+        // Crear una petición interna al endpoint real
+        $subRequest = Request::create(
+            "/products/$productId/variants/$variantId",
+            'PUT',
+            [],
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode($testData)
+        );
+
+        $response = $httpKernel->handle($subRequest, HttpKernelInterface::SUB_REQUEST);
+
+        return $this->json([
+            'test' => 'Actualizar variante',
+            'endpoint' => "PUT /products/$productId/variants/$variantId",
+            'product_id' => $productId,
+            'variant_id' => $variantId,
+            'data_sent' => $testData,
+            'response' => json_decode($response->getContent(), true),
+            'status_code' => $response->getStatusCode()
+        ]);
+    }
+
+    /**
+     * Test completo: Crear, listar, obtener, actualizar y eliminar un producto
+     */
+    #[Route('/test/product/full-test', name: 'test_full_product_cycle', methods: ['GET'])]
+    public function testFullProductCycle(HttpKernelInterface $httpKernel): JsonResponse
+    {
+        $results = [];
+
+        // 1. Crear producto
+        $createData = [
+            'name' => 'Camiseta de Prueba',
+            'description' => 'Camiseta para testing',
+            'price' => 29.99,
+            'stock' => 15,
+            'variants' => [
+                [
+                    'name' => 'Azul - M',
+                    'price' => 29.99,
+                    'stock' => 8,
+                    'image' => 'camiseta_azul_m.jpg'
+                ]
+            ]
+        ];
+
+        $createRequest = Request::create(
+            '/products',
+            'POST',
+            [],
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode($createData)
+        );
+
+        $createResponse = $httpKernel->handle($createRequest, HttpKernelInterface::SUB_REQUEST);
+        $results['create'] = [
+            'status' => $createResponse->getStatusCode(),
+            'response' => json_decode($createResponse->getContent(), true)
+        ];
+
+        // 2. Listar productos para obtener el ID
+        $listRequest = Request::create('/products', 'GET');
+        $listResponse = $httpKernel->handle($listRequest, HttpKernelInterface::SUB_REQUEST);
+        $products = json_decode($listResponse->getContent(), true);
+        
+        if (!empty($products)) {
+            $productId = $products[0]['id'];
+            $variantId = !empty($products[0]['variants']) ? $products[0]['variants'][0]['id'] : null;
+
+            // 3. Obtener producto específico
+            $getRequest = Request::create("/products/$productId", 'GET');
+            $getResponse = $httpKernel->handle($getRequest, HttpKernelInterface::SUB_REQUEST);
+            $results['get'] = [
+                'status' => $getResponse->getStatusCode(),
+                'response' => json_decode($getResponse->getContent(), true)
+            ];
+
+            // 4. Actualizar producto
+            $updateData = [
+                'name' => 'Camiseta de Prueba Actualizada',
+                'price' => 34.99
+            ];
+
+            $updateRequest = Request::create(
+                "/products/$productId",
+                'PUT',
+                [],
+                [],
+                [],
+                ['CONTENT_TYPE' => 'application/json'],
+                json_encode($updateData)
+            );
+
+            $updateResponse = $httpKernel->handle($updateRequest, HttpKernelInterface::SUB_REQUEST);
+            $results['update'] = [
+                'status' => $updateResponse->getStatusCode(),
+                'response' => json_decode($updateResponse->getContent(), true)
+            ];
+
+            // 5. Actualizar variante si existe
+            if ($variantId) {
+                $variantUpdateData = [
+                    'name' => 'Azul - M Actualizada',
+                    'price' => 34.99,
+                    'stock' => 10
+                ];
+
+                $variantRequest = Request::create(
+                    "/products/$productId/variants/$variantId",
+                    'PUT',
+                    [],
+                    [],
+                    [],
+                    ['CONTENT_TYPE' => 'application/json'],
+                    json_encode($variantUpdateData)
+                );
+
+                $variantResponse = $httpKernel->handle($variantRequest, HttpKernelInterface::SUB_REQUEST);
+                $results['update_variant'] = [
+                    'status' => $variantResponse->getStatusCode(),
+                    'response' => json_decode($variantResponse->getContent(), true)
                 ];
             }
 
-            $data[] = [
-                'id' => (string) $product->getId(),
-                'name' => (string) $product->getName(),
-                'description' => (string) $product->getDescription(),
-                'price' => $product->price()->value(),
-                'stock' => $product->getStock(),
-                'variants' => $variants
+            // 6. Eliminar producto
+            $deleteRequest = Request::create("/products/$productId", 'DELETE');
+            $deleteResponse = $httpKernel->handle($deleteRequest, HttpKernelInterface::SUB_REQUEST);
+            $results['delete'] = [
+                'status' => $deleteResponse->getStatusCode(),
+                'response' => json_decode($deleteResponse->getContent(), true)
             ];
         }
 
-        return $this->json($data);
-    }
-
-    /**
-     * @OA\Get(
-     *     path="/test/product/{id}",
-     *     summary="Obtener un producto específico de prueba",
-     *     description="Obtiene los datos de un producto específico con sus variantes por su ID (solo para desarrollo)",
-     *     tags={"Pruebas de Productos"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID único del producto",
-     *         @OA\Schema(type="string", format="uuid")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Producto obtenido exitosamente",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="id", type="string", format="uuid"),
-     *             @OA\Property(property="name", type="string", example="Camiseta"),
-     *             @OA\Property(property="description", type="string", example="Camiseta de algodón"),
-     *             @OA\Property(property="price", type="number", format="float", example=19.99),
-     *             @OA\Property(property="stock", type="integer", example=10),
-     *             @OA\Property(
-     *                 property="variants",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     type="object",
-     *                     @OA\Property(property="id", type="string", format="uuid"),
-     *                     @OA\Property(property="name", type="string", example="Camiseta Azul M"),
-     *                     @OA\Property(property="price", type="number", format="float", example=21.99),
-     *                     @OA\Property(property="stock", type="integer", example=5),
-     *                     @OA\Property(property="image", type="string", example="imagen.jpg")
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Producto no encontrado",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="Producto no encontrado")
-     *         )
-     *     )
-     * )
-     */
-    #[Route('/test/product/{id}', name: 'test_get_product', methods: ['GET'])]
-    public function get(string $id, ProductRepository $productRepository): JsonResponse
-    {
-        $product = $productRepository->findById($id);
-        
-        if (!$product) {
-            return $this->json(['error' => 'Producto no encontrado'], 404);
-        }
-        
-        $variants = [];
-        foreach ($product->getVariants() as $variant) {
-            $variants[] = [
-                'id' => (string) $variant->getId(),
-                'name' => (string) $variant->getName(),
-                'price' => $variant->getPrice(),
-                'stock' => $variant->getStock(),
-                'image' => $variant->getImage()
-            ];
-        }
-
-        $data = [
-            'id' => (string) $product->getId(),
-            'name' => (string) $product->getName(),
-            'description' => (string) $product->getDescription(),
-            'price' => $product->price()->value(),
-            'stock' => $product->getStock(),
-            'variants' => $variants
-        ];
-
-        return $this->json($data);
-    }
-
-    /**
-     * @OA\Post(
-     *     path="/test/product/create",
-     *     summary="Crear un producto de prueba usando handlers",
-     *     description="Crea un producto de prueba usando los handlers de la aplicación (solo para desarrollo)",
-     *     tags={"Pruebas de Productos"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"name", "price", "stock", "variants"},
-     *             @OA\Property(property="name", type="string", description="Nombre del producto", example="Camiseta"),
-     *             @OA\Property(property="description", type="string", description="Descripción del producto", example="Camiseta de algodón"),
-     *             @OA\Property(property="price", type="number", format="float", description="Precio del producto", example=19.99),
-     *             @OA\Property(property="stock", type="integer", description="Cantidad en stock", example=10),
-     *             @OA\Property(
-     *                 property="variants",
-     *                 type="array",
-     *                 description="Lista de variantes del producto",
-     *                 @OA\Items(
-     *                     type="object",
-     *                     @OA\Property(property="name", type="string", description="Nombre de la variante", example="Camiseta Azul M"),
-     *                     @OA\Property(property="price", type="number", format="float", description="Precio de la variante", example=21.99),
-     *                     @OA\Property(property="stock", type="integer", description="Stock de la variante", example=5),
-     *                     @OA\Property(property="image", type="string", description="Imagen de la variante", example="imagen.jpg")
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Producto creado exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Producto creado exitosamente")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Datos de entrada inválidos",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="Faltan campos obligatorios")
-     *         )
-     *     )
-     * )
-     */
-    #[Route('/test/product/create', name: 'test_create_product', methods: ['POST'])]
-    public function create(Request $request, CreateProductHandler $handler): JsonResponse
-    {
-        $data = json_decode($request->getContent(), true);
-
-        if (!isset($data['name']) || !isset($data['variants'])) {
-            return $this->json(['error' => 'Faltan campos obligatorios'], 400);
-        }
-
-        if (empty($data['name']) || empty($data['variants']) || !is_array($data['variants'])) {
-            return $this->json(['error' => 'Campos obligatorios faltantes o no válidos: nombre o variantes'], 400);
-        }
-
-        if (!isset($data['price']) || !is_numeric($data['price'])) {
-            return $this->json(['error' => 'El precio es obligatorio y debe ser numérico.'], 400);
-        }
-
-        if (!isset($data['stock']) || !is_numeric($data['stock'])) {
-            return $this->json(['error' => 'El stock es obligatorio y debe ser numérico'], 400);
-        }
-
-        try {
-            $command = new CreateProductCommand(
-                \Ramsey\Uuid\Uuid::uuid4()->toString(),
-                $data['name'],
-                $data['description'] ?? '',
-                (float) $data['price'],
-                (int) $data['stock'],
-                $data['variants'] ?? []
-            );
-
-            $handler->__invoke($command);
-
-            return $this->json(['message' => 'Producto creado exitosamente'], 201);
-        } catch (\DomainException $e) {
-            return $this->json(['error' => $e->getMessage()], 422);
-        } catch (\Throwable $e) {
-            return $this->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
-        }
-    }
-
-    /**
-     * @OA\Put(
-     *     path="/test/product/{id}",
-     *     summary="Actualizar un producto de prueba",
-     *     description="Actualiza los datos de un producto existente por su ID (solo para desarrollo)",
-     *     tags={"Pruebas de Productos"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID único del producto",
-     *         @OA\Schema(type="string", format="uuid")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="name", type="string", description="Nuevo nombre del producto"),
-     *             @OA\Property(property="description", type="string", description="Nueva descripción del producto"),
-     *             @OA\Property(property="price", type="number", format="float", description="Nuevo precio del producto"),
-     *             @OA\Property(property="stock", type="integer", description="Nueva cantidad en stock")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Producto actualizado exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Producto actualizado exitosamente")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Datos de entrada inválidos",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="No se proporcionaron datos para actualizar")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Error de validación del dominio",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string")
-     *         )
-     *     )
-     * )
-     */
-    #[Route('/test/product/{id}', name: 'test_update_product', methods: ['PUT'])]
-    public function update(string $id, Request $request, UpdateProductHandler $handler): JsonResponse
-    {
-        $data = json_decode($request->getContent(), true);
-
-        if (empty($data)) {
-            return $this->json(['error' => 'No se proporcionaron datos para actualizar'], 400);
-        }
-
-        try {
-            $command = new UpdateProductCommand(
-                $id,
-                $data['name'] ?? null,
-                $data['description'] ?? null,
-                isset($data['price']) ? (float) $data['price'] : null,
-                isset($data['stock']) ? (int) $data['stock'] : null,
-                $data['variants'] ?? null
-            );
-
-            $handler->__invoke($command);
-
-            return $this->json(['message' => 'Producto actualizado exitosamente'], 200);
-        } catch (\DomainException $e) {
-            return $this->json(['error' => $e->getMessage()], 422);
-        } catch (\Throwable $e) {
-            return $this->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
-        }
-    }
-
-    /**
-     * @OA\Delete(
-     *     path="/test/product/{id}",
-     *     summary="Eliminar un producto de prueba",
-     *     description="Elimina un producto del sistema por su ID (solo para desarrollo)",
-     *     tags={"Pruebas de Productos"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID único del producto a eliminar",
-     *         @OA\Schema(type="string", format="uuid")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Producto eliminado exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Producto eliminado exitosamente")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Error de validación del dominio",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="Producto no encontrado")
-     *         )
-     *     )
-     * )
-     */
-    #[Route('/test/product/{id}', name: 'test_delete_product', methods: ['DELETE'])]
-    public function delete(string $id, DeleteProductHandler $handler): JsonResponse
-    {
-        try {
-            $command = new DeleteProductCommand($id);
-            $handler->__invoke($command);
-
-            return $this->json(['message' => 'Producto eliminado exitosamente'], 200);
-        } catch (\DomainException $e) {
-            return $this->json(['error' => $e->getMessage()], 422);
-        } catch (\Throwable $e) {
-            return $this->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
-        }
-    }
-
-    /**
-     * @OA\Put(
-     *     path="/test/product/{productId}/variants/{variantId}",
-     *     summary="Actualizar una variante de producto de prueba",
-     *     description="Actualiza los datos de una variante específica de un producto (solo para desarrollo)",
-     *     tags={"Pruebas de Productos"},
-     *     @OA\Parameter(
-     *         name="productId",
-     *         in="path",
-     *         required=true,
-     *         description="ID único del producto",
-     *         @OA\Schema(type="string", format="uuid")
-     *     ),
-     *     @OA\Parameter(
-     *         name="variantId",
-     *         in="path",
-     *         required=true,
-     *         description="ID único de la variante",
-     *         @OA\Schema(type="string", format="uuid")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="name", type="string", description="Nuevo nombre de la variante"),
-     *             @OA\Property(property="price", type="number", format="float", description="Nuevo precio de la variante"),
-     *             @OA\Property(property="stock", type="integer", description="Nueva cantidad en stock de la variante"),
-     *             @OA\Property(property="image", type="string", description="Nueva imagen de la variante")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Variante actualizada exitosamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Variante actualizada exitosamente")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Datos de entrada inválidos",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="No se proporcionaron datos para actualizar")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Error de validación del dominio",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="Producto no encontrado")
-     *         )
-     *     )
-     * )
-     */
-    #[Route('/test/product/{productId}/variants/{variantId}', name: 'test_update_variant', methods: ['PUT'])]
-    public function updateVariant(string $productId, string $variantId, Request $request, UpdateVariantHandler $handler): JsonResponse
-    {
-        $data = json_decode($request->getContent(), true);
-
-        if (empty($data)) {
-            return $this->json(['error' => 'No se proporcionaron datos para actualizar'], 400);
-        }
-
-        try {
-            $command = new UpdateVariantCommand(
-                $productId,
-                $variantId,
-                $data['name'] ?? null,
-                isset($data['price']) ? (float) $data['price'] : null,
-                isset($data['stock']) ? (int) $data['stock'] : null,
-                $data['image'] ?? null
-            );
-
-            $handler->__invoke($command);
-
-            return $this->json(['message' => 'Variante actualizada exitosamente'], 200);
-        } catch (\DomainException $e) {
-            return $this->json(['error' => $e->getMessage()], 422);
-        } catch (\Throwable $e) {
-            return $this->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
-        }
+        return $this->json([
+            'test' => 'Ciclo completo de producto',
+            'description' => 'Crear, obtener, actualizar y eliminar un producto',
+            'results' => $results
+        ]);
     }
 }
