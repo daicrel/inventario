@@ -21,7 +21,7 @@ Incluye persistencia en MySQL, eventos de dominio y notificación por correo ele
 
 1. **Clonar el repositorio**
    ```bash
-   git clone <URL_DEL_REPOSITORIO>
+   git clone https://github.com/daicrel/inventario.git
    cd inventario
    ```
 
@@ -50,7 +50,7 @@ Incluye persistencia en MySQL, eventos de dominio y notificación por correo ele
 ## Uso
 
 - Acceder a la documentación Swagger en:  
-  `http://localhost:8000/swagger`
+  [http://localhost:8000/api/doc](http://localhost:8000/api/doc)
 
 - Probar los endpoints para crear productos, consultar productos, etc.
 
