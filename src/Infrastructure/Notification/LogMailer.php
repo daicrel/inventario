@@ -4,19 +4,16 @@
 
 namespace App\Infrastructure\Notification;
 
-use App\Domain\Notification\EmailSenderInterface;
 use Psr\Log\LoggerInterface;
 
-class LogMailer implements EmailSenderInterface
+class LogMailer extends AbstractEmailSender
 {
-    private LoggerInterface $logger;
-
     public function __construct(LoggerInterface $logger)
     {
-        $this->logger = $logger;
+        parent::__construct('daicrela@gmail.com', $logger);
     }
 
-    public function send(string $to, string $subject, string $body): void
+    protected function doSend(string $to, string $subject, string $body): void
     {
         $this->logger->info('Email would be sent', [
             'to' => $to,

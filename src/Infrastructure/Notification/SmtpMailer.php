@@ -4,18 +4,27 @@
 
 namespace App\Infrastructure\Notification;
 
-use App\Domain\Notification\EmailSenderInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
+use Psr\Log\LoggerInterface;
 
-class SmtpMailer implements EmailSenderInterface
+class SmtpMailer extends AbstractEmailSender
 {
-    public function __construct(private MailerInterface $mailer) {}
+    private MailerInterface $mailer;
 
-    public function send(string $to, string $subject, string $body): void
+    public function __construct(
+        MailerInterface $mailer, 
+        string $fromEmail = 'daicrela@gmail.com',
+        ?LoggerInterface $logger = null
+    ) {
+        parent::__construct($fromEmail, $logger);
+        $this->mailer = $mailer;
+    }
+
+    protected function doSend(string $to, string $subject, string $body): void
     {
         $email = (new Email())
-            ->from('daicrela@gmail.com')
+            ->from($this->getFromEmail())
             ->to($to)
             ->subject($subject)
             ->text($body);

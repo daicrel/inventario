@@ -4,27 +4,29 @@
 
 namespace App\Infrastructure\Notification;
 
-use App\Domain\Notification\EmailSenderInterface;
 use SendGrid;
 use SendGrid\Mail\Mail;
 use SendGrid\Mail\TypeException;
+use Psr\Log\LoggerInterface;
 
-class SendGridMailer implements EmailSenderInterface
+class SendGridMailer extends AbstractEmailSender
 {
     private SendGrid $sendGrid;
-    private string $fromEmail;
 
-    public function __construct(SendGrid $sendGrid, string $fromEmail = 'daicrela@gmail.com')
-    {
+    public function __construct(
+        SendGrid $sendGrid, 
+        string $fromEmail = 'daicrela@gmail.com',
+        ?LoggerInterface $logger = null
+    ) {
+        parent::__construct($fromEmail, $logger);
         $this->sendGrid = $sendGrid;
-        $this->fromEmail = $fromEmail;
     }
 
-    public function send(string $to, string $subject, string $body): void
+    protected function doSend(string $to, string $subject, string $body): void
     {
         try {
             $email = new Mail();
-            $email->setFrom($this->fromEmail);
+            $email->setFrom($this->getFromEmail());
             $email->setSubject($subject);
             $email->addTo($to);
             $email->addContent("text/plain", $body);
@@ -36,9 +38,6 @@ class SendGridMailer implements EmailSenderInterface
                     'SendGrid error: ' . $response->statusCode() . ' - ' . $response->body()
                 );
             }
-
-            // Log success if needed
-            // error_log("Email sent successfully via SendGrid");
         } catch (TypeException $e) {
             throw new \RuntimeException('Error creating SendGrid email: ' . $e->getMessage(), 0, $e);
         } catch (\Exception $e) {

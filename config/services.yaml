@@ -66,3 +66,11 @@ services:
 
     App\Infrastructure\Product\Controller\Queries\ProductQueryController:
         tags: ['controller.service_arguments']
+
+    # Mailgun\Mailgun:
+    #     factory: ['Mailgun\\Mailgun', 'create']
+    #     arguments:
+    #         $apiKey: '%env(MAILGUN_API_KEY)%'
+
+    App\Infrastructure\Notification\MailgunMailer:
+        autowire: false

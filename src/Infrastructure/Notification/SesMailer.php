@@ -4,26 +4,28 @@
 
 namespace App\Infrastructure\Notification;
 
-use App\Domain\Notification\EmailSenderInterface;
 use Aws\Ses\SesClient;
 use Aws\Exception\AwsException;
+use Psr\Log\LoggerInterface;
 
-class SesMailer implements EmailSenderInterface
+class SesMailer extends AbstractEmailSender
 {
     private SesClient $sesClient;
-    private string $fromEmail;
 
-    public function __construct(SesClient $sesClient, string $fromEmail = 'daicrela@gmail.com')
-    {
+    public function __construct(
+        SesClient $sesClient, 
+        string $fromEmail = 'daicrela@gmail.com',
+        ?LoggerInterface $logger = null
+    ) {
+        parent::__construct($fromEmail, $logger);
         $this->sesClient = $sesClient;
-        $this->fromEmail = $fromEmail;
     }
 
-    public function send(string $to, string $subject, string $body): void
+    protected function doSend(string $to, string $subject, string $body): void
     {
         try {
             $result = $this->sesClient->sendEmail([
-                'Source' => $this->fromEmail,
+                'Source' => $this->getFromEmail(),
                 'Destination' => [
                     'ToAddresses' => [$to],
                 ],
