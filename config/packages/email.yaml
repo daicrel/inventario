@@ -16,7 +16,7 @@ services:
     # Configuración AWS SES Client
     Aws\Ses\SesClient:
         arguments:
-            $config:
+            -
                 region: '%app.email.ses.region%'
                 credentials:
                     key: '%app.email.ses.access_key%'
@@ -24,6 +24,7 @@ services:
 
     # Configuración SendGrid Client
     SendGrid:
+        class: SendGrid
         arguments:
             $apiKey: '%app.email.sendgrid.api_key%'
 
@@ -36,4 +37,6 @@ services:
     App\Infrastructure\Notification\SendGridMailer:
         arguments:
             $sendGrid: '@SendGrid'
-            $fromEmail: '%app.email.from%' 
+            $fromEmail: '%app.email.from%'
+
+    App\Infrastructure\Notification\SmtpMailer: ~ 
