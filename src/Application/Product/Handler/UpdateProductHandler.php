@@ -58,7 +58,7 @@ final class UpdateProductHandler
             foreach ($command->getVariants() as $variantData) {
                 $variantId = new VariantId(Uuid::uuid4()->toString());
                 $variantName = new ProductName($variantData['name']);
-                $variantPrice = $variantData['price'];
+                $variantPrice = new \App\Domain\Product\ValueObject\Price($variantData['price']);
                 $variantStock = $variantData['stock'];
                 $variantImage = $variantData['image'] ?? null;
 
