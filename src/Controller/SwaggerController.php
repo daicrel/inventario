@@ -253,6 +253,123 @@ class SwaggerController extends AbstractController
                     ]
                 ],
                 '/products/{id}' => [
+                    'get' => [
+                        'tags' => ['Productos'],
+                        'summary' => 'Obtener un producto específico',
+                        'description' => 'Obtiene los datos de un producto específico con sus variantes por su ID',
+                        'parameters' => [
+                            [
+                                'name' => 'id',
+                                'in' => 'path',
+                                'required' => true,
+                                'description' => 'ID único del producto',
+                                'schema' => [
+                                    'type' => 'string',
+                                    'format' => 'uuid'
+                                ]
+                            ]
+                        ],
+                        'responses' => [
+                            '200' => [
+                                'description' => 'Producto obtenido exitosamente',
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => [
+                                            'type' => 'object',
+                                            'properties' => [
+                                                'id' => [
+                                                    'type' => 'string',
+                                                    'format' => 'uuid',
+                                                    'example' => '550e8400-e29b-41d4-a716-446655440000'
+                                                ],
+                                                'name' => [
+                                                    'type' => 'string',
+                                                    'example' => 'Laptop Dell XPS 13'
+                                                ],
+                                                'description' => [
+                                                    'type' => 'string',
+                                                    'example' => 'Laptop ultrabook con pantalla de 13 pulgadas'
+                                                ],
+                                                'price' => [
+                                                    'type' => 'number',
+                                                    'format' => 'float',
+                                                    'example' => 1299.99
+                                                ],
+                                                'stock' => [
+                                                    'type' => 'integer',
+                                                    'example' => 50
+                                                ],
+                                                'variants' => [
+                                                    'type' => 'array',
+                                                    'items' => [
+                                                        'type' => 'object',
+                                                        'properties' => [
+                                                            'id' => [
+                                                                'type' => 'string',
+                                                                'format' => 'uuid',
+                                                                'example' => '550e8400-e29b-41d4-a716-446655440001'
+                                                            ],
+                                                            'name' => [
+                                                                'type' => 'string',
+                                                                'example' => 'Blanco - Talla 42'
+                                                            ],
+                                                            'price' => [
+                                                                'type' => 'number',
+                                                                'format' => 'float',
+                                                                'example' => 119.99
+                                                            ],
+                                                            'stock' => [
+                                                                'type' => 'integer',
+                                                                'example' => 40
+                                                            ],
+                                                            'image' => [
+                                                                'type' => 'string',
+                                                                'example' => 'pegasus_blanco_42.jpg'
+                                                            ]
+                                                        ]
+                                                    ]
+                                                ]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ],
+                            '404' => [
+                                'description' => 'Producto no encontrado',
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => [
+                                            'type' => 'object',
+                                            'properties' => [
+                                                'error' => [
+                                                    'type' => 'string',
+                                                    'example' => 'Producto no encontrado'
+                                                ]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ],
+                            '500' => [
+                                'description' => 'Error interno del servidor',
+                                'content' => [
+                                    'application/json' => [
+                                        'schema' => [
+                                            'type' => 'object',
+                                            'properties' => [
+                                                'error' => [
+                                                    'type' => 'string'
+                                                ],
+                                                'trace' => [
+                                                    'type' => 'string'
+                                                ]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
                     'put' => [
                         'tags' => ['Productos'],
                         'summary' => 'Actualizar un producto existente',

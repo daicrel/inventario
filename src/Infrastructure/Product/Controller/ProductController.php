@@ -208,6 +208,96 @@ class ProductController extends AbstractController
     }
 
     /**
+     * @OA\Get(
+     *     path="/products/{id}",
+     *     summary="Obtener un producto específico",
+     *     description="Obtiene los datos de un producto específico con sus variantes por su ID",
+     *     tags={"Productos"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID único del producto",
+     *         @OA\Schema(type="string", format="uuid")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Producto obtenido exitosamente",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="id", type="string", format="uuid", example="550e8400-e29b-41d4-a716-446655440000"),
+     *             @OA\Property(property="name", type="string", example="Laptop Dell XPS 13"),
+     *             @OA\Property(property="description", type="string", example="Laptop ultrabook con pantalla de 13 pulgadas"),
+     *             @OA\Property(property="price", type="number", format="float", example=1299.99),
+     *             @OA\Property(property="stock", type="integer", example=50),
+     *             @OA\Property(
+     *                 property="variants",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="string", format="uuid", example="550e8400-e29b-41d4-a716-446655440001"),
+     *                     @OA\Property(property="name", type="string", example="Blanco - Talla 42"),
+     *                     @OA\Property(property="price", type="number", format="float", example=119.99),
+     *                     @OA\Property(property="stock", type="integer", example=40),
+     *                     @OA\Property(property="image", type="string", example="pegasus_blanco_42.jpg")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Producto no encontrado",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Producto no encontrado")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error interno del servidor",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string"),
+     *             @OA\Property(property="trace", type="string")
+     *         )
+     *     )
+     * )
+     */
+    #[Route('/products/{id}', name: 'get_product', methods: ['GET'])]
+    public function get(string $id, ProductRepository $productRepository): JsonResponse
+    {
+        try {
+            $product = $productRepository->findById($id);
+            
+            if (!$product) {
+                return $this->json(['error' => 'Producto no encontrado'], 404);
+            }
+            
+            $variants = [];
+            foreach ($product->getVariants() as $variant) {
+                $variants[] = [
+                    'id' => (string) $variant->getId(),
+                    'name' => (string) $variant->getName(),
+                    'price' => $variant->getPrice(),
+                    'stock' => $variant->getStock(),
+                    'image' => $variant->getImage()
+                ];
+            }
+            
+            $data = [
+                'id' => (string) $product->getId(),
+                'name' => (string) $product->getName(),
+                'description' => (string) $product->getDescription(),
+                'price' => $product->price()->value(),
+                'stock' => $product->getStock(),
+                'variants' => $variants
+            ];
+            
+            return $this->json($data, 200);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
+        }
+    }
+
+    /**
      * @OA\Put(
      *     path="/products/{id}",
      *     summary="Actualizar un producto existente",
